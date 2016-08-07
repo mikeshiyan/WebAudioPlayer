@@ -216,6 +216,14 @@
   WebAudioPlayer.create = function () {
     this.audio = Audio.create();
 
+    var data;
+    if (data = this.readStorage('eq')) {
+      this.setEq(data);
+    }
+    if (data = this.readStorage('vol')) {
+      this.setVolume(data);
+    }
+
     return this;
   };
 
@@ -353,7 +361,7 @@
   WebAudioPlayer.setVolume = function (gain) {
     this.audio.Gain.gain.value = gain;
 
-    return this;
+    return this.updateStorage('vol', gain);
   };
 
   /**
@@ -385,7 +393,7 @@
       }
     }
 
-    return this;
+    return this.updateStorage('eq', this.getEq());
   };
 
   /**
@@ -412,6 +420,40 @@
    */
   WebAudioPlayer.isPlaying = function () {
     return State.isPlaying;
+  };
+
+  /**
+   * Updates data in the storage.
+   *
+   * @param {string} key
+   *   Variable key.
+   * @param {*} value
+   *   Variable value.
+   *
+   * @returns {WebAudioPlayer}
+   *   The WebAudioPlayer object.
+   */
+  WebAudioPlayer.updateStorage = function (key, value) {
+    if (typeof localStorage != 'undefined') {
+      localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
+    }
+
+    return this;
+  };
+
+  /**
+   * Reads data from the storage.
+   *
+   * @param {string} key
+   *   Variable key.
+   *
+   * @returns {*|null}
+   *   Variable value if it exists in the storage, null otherwise.
+   */
+  WebAudioPlayer.readStorage = function (key) {
+    if (typeof localStorage != 'undefined') {
+      return JSON.parse(localStorage.getItem('WebAudioPlayer.' + key));
+    }
   };
 
   window.WebAudioPlayer = WebAudioPlayer.create();
