@@ -198,7 +198,7 @@
    *
    * @type {Audio}
    */
-  WebAudioPlayer.audio = Audio.create();
+  WebAudioPlayer.audio = null;
 
   /**
    * Contains raw audio data.
@@ -206,6 +206,18 @@
    * @type {AudioBuffer}
    */
   WebAudioPlayer.buffer = null;
+
+  /**
+   * Creates WebAudioPlayer object.
+   *
+   * @returns {WebAudioPlayer}
+   *   The WebAudioPlayer object.
+   */
+  WebAudioPlayer.create = function () {
+    this.audio = Audio.create();
+
+    return this;
+  };
 
   /**
    * Loads the audio file by URL into buffer.
@@ -402,6 +414,6 @@
     return State.isPlaying;
   };
 
-  window.WebAudioPlayer = WebAudioPlayer;
+  window.WebAudioPlayer = WebAudioPlayer.create();
 
 })();
