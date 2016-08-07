@@ -135,6 +135,58 @@
   };
 
   /**
+   * Starts playing audio from buffer.
+   *
+   * This method creates new audio source, connects it, and starts playback
+   * immediately. Offset and duration parameters are taken in real time from
+   * the State object.
+   *
+   * This method also updates the State object with actual values.
+   *
+   * @param {AudioBuffer} buffer
+   *   The AudioBuffer object.
+   */
+  Audio.start = function (buffer) {
+    var audio = this;
+
+    State.isPlaying = true;
+
+    this.BufferSource = this.Context.createBufferSource();
+    this.BufferSource.connect(this.Analyser);
+    this.BufferSource.buffer = buffer;
+
+    this.BufferSource.onended = function () {
+      this.finished = true;
+
+      // Check if the actual source object is finished, but the state is still
+      // 'playing'. This means that no new source was started.
+      if (audio.BufferSource.finished && State.isPlaying) {
+        State.isPlaying = false;
+        State.offset = audio.BufferSource.buffer.duration;
+      }
+    };
+
+    var offset = Math.max(State.offset, 0);
+    var duration = Math.max(this.BufferSource.buffer.duration - offset, 0);
+
+    State.playStartedAt = this.Context.currentTime;
+    this.BufferSource.start(0, offset, duration);
+  };
+
+  /**
+   * Stops playing audio.
+   *
+   * This method also updates the State object with actual values.
+   */
+  Audio.stop = function () {
+    State.isPlaying = false;
+
+    if (this.BufferSource) {
+      this.BufferSource.stop();
+    }
+  };
+
+  /**
    * Provides an audio player.
    *
    * @type {object}
@@ -198,27 +250,8 @@
       throw new Error('Audio file is not loaded.');
     }
 
-    var player = this;
-
     if (!State.isPlaying) {
-      State.isPlaying = true;
-
-      this.audio.BufferSource = this.audio.Context.createBufferSource();
-      this.audio.BufferSource.connect(this.audio.Analyser);
-      this.audio.BufferSource.buffer = this.buffer;
-
-      this.audio.BufferSource.onended = function () {
-        this.finished = true;
-        // Check if the actual source object is finished, but the state is still
-        // 'playing'. This means that no new play() was called.
-        if (player.audio.BufferSource.finished && State.isPlaying) {
-          State.isPlaying = false;
-          State.offset = player.audio.BufferSource.buffer.duration;
-        }
-      };
-
-      State.playStartedAt = this.audio.Context.currentTime;
-      this.audio.BufferSource.start(0, State.offset, Math.max(this.audio.BufferSource.buffer.duration - State.offset, 0));
+      this.audio.start(this.buffer);
     }
 
     return this;
@@ -231,14 +264,8 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.stop = function () {
-    var isPlaying = State.isPlaying;
-
-    State.isPlaying = false;
     State.offset = 0;
-
-    if (isPlaying) {
-      this.audio.BufferSource.stop();
-    }
+    this.audio.stop();
 
     return this;
   };
@@ -251,11 +278,10 @@
    */
   WebAudioPlayer.pause = function () {
     if (State.isPlaying) {
-      State.isPlaying = false;
       State.offset += this.audio.Context.currentTime - State.playStartedAt;
-
-      this.audio.BufferSource.stop();
     }
+
+    this.audio.stop();
 
     return this;
   };
@@ -280,9 +306,7 @@
     State.offset = offset;
 
     if (State.isPlaying) {
-      State.isPlaying = false;
-
-      this.audio.BufferSource.stop();
+      this.audio.stop();
       this.play();
     }
 
