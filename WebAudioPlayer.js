@@ -233,27 +233,35 @@
    * @param {string} url
    *   URL of the file.
    *
-   * @returns {WebAudioPlayer}
-   *   The WebAudioPlayer object.
+   * @returns {Promise}
+   *   The Promise object.
    */
   WebAudioPlayer.loadUrl = function (url) {
     var player = this;
-    var xhr = new XMLHttpRequest();
 
-    xhr.open('GET', url);
-    xhr.responseType = 'arraybuffer';
+    return new Promise(function (ok, fail) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.responseType = 'arraybuffer';
 
-    xhr.addEventListener('load', function () {
-      if (xhr.status == 200 || xhr.status == 206) {
-        player.audio.OfflineContext.decodeAudioData(xhr.response).then(function (data) {
-          player.buffer = data;
-        });
-      }
+      xhr.onload = function () {
+        if (xhr.status == 200 || xhr.status == 206) {
+          player.audio.OfflineContext.decodeAudioData(xhr.response).then(function (data) {
+            player.buffer = data;
+            ok();
+          }, fail);
+        }
+        else {
+          fail(new Error(xhr.statusText));
+        }
+      };
+
+      xhr.onerror = function () {
+        fail(new Error('Unknown error.'));
+      };
+
+      xhr.send();
     });
-
-    xhr.send();
-
-    return this;
   };
 
   /**
