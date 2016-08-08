@@ -58,6 +58,15 @@
   var State = {};
 
   /**
+   * Indicates the current playback position.
+   *
+   * This variable contains a number of seconds from the start of an audio file.
+   *
+   * @type {number}
+   */
+  State.currentTime = 0;
+
+  /**
    * Indicates whether an audio is currently playing.
    *
    * @type {boolean}
@@ -68,6 +77,9 @@
    * Indicates the offset with which the most recent playback was started.
    *
    * This variable contains a number of seconds from the start of an audio file.
+   * Offset must be changed only when !State.isPlaying, because other variables
+   * (for example, currentTime) are calculated based on it and current playback
+   * state.
    *
    * @type {number}
    */
@@ -145,12 +157,23 @@
    *   The Audio object.
    */
   Audio.create = function () {
+    var audio = this;
+
     this.Context = new (window.AudioContext || window.webkitAudioContext);
     this.OfflineContext = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, this.Context.sampleRate);
 
     this.Analyser = this.Context.createAnalyser();
     this.Gain = this.Context.createGain();
     this.ScriptProcessor = this.Context.createScriptProcessor();
+
+    this.ScriptProcessor.onaudioprocess = function () {
+      if (State.isPlaying) {
+        State.currentTime = State.offset + audio.Context.currentTime - State.playStartedAt;
+      }
+      else {
+        State.currentTime = State.offset;
+      }
+    };
 
     this.filters = [];
     var frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
@@ -322,8 +345,8 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.stop = function () {
-    State.offset = 0;
     this.audio.stop();
+    State.offset = 0;
 
     return this;
   };
@@ -335,11 +358,14 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.pause = function () {
-    if (State.isPlaying) {
+    var wasPlaying = State.isPlaying;
+    this.audio.stop();
+
+    if (wasPlaying) {
+      // Do not use State.currentTime directly, because it's calculated
+      // asynchronously and based on offset.
       State.offset += this.audio.Context.currentTime - State.playStartedAt;
     }
-
-    this.audio.stop();
 
     return this;
   };
@@ -361,11 +387,13 @@
       throw new TypeError('Offset parameter accepts non-negative numbers only.');
     }
 
-    State.offset = offset;
-
     if (State.isPlaying) {
       this.audio.stop();
+      State.offset = offset;
       this.play();
+    }
+    else {
+      State.offset = offset;
     }
 
     return this;
@@ -378,13 +406,7 @@
    *   Seconds from the start of an audio file.
    */
   WebAudioPlayer.getPosition = function () {
-    var position = State.offset;
-
-    if (State.isPlaying) {
-      position += this.audio.Context.currentTime - State.playStartedAt;
-    }
-
-    return position;
+    return State.currentTime;
   };
 
   /**
