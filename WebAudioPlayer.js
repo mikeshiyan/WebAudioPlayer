@@ -8,6 +8,49 @@
   'use strict';
 
   /**
+   * Contains various utility methods.
+   *
+   * @type {object}
+   */
+  var Utility = {};
+
+  /**
+   * Makes an XMLHttpRequest to url to get an array buffer.
+   *
+   * @param {string} url
+   *   URL to get.
+   *
+   * @returns {Promise}
+   *   The Promise object.
+   *   Fulfill callback arguments:
+   *   - {ArrayBuffer} The ArrayBuffer object.
+   *   Reject callback arguments:
+   *   - {Error} The Error object.
+   */
+  Utility.getArrayBuffer = function (url) {
+    return new Promise(function (ok, fail) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.responseType = 'arraybuffer';
+
+      xhr.onload = function () {
+        if (xhr.status == 200 || xhr.status == 206) {
+          ok(xhr.response);
+        }
+        else {
+          fail(new Error(xhr.statusText));
+        }
+      };
+
+      xhr.onerror = function () {
+        fail(new Error('Unknown error.'));
+      };
+
+      xhr.send();
+    });
+  };
+
+  /**
    * Contains various operational data.
    *
    * @type {object}
@@ -235,33 +278,20 @@
    *
    * @returns {Promise}
    *   The Promise object.
+   *   Fulfill callback won't receive arguments.
+   *   Reject callback arguments:
+   *   - {Error} The Error object.
    */
   WebAudioPlayer.loadUrl = function (url) {
     var player = this;
 
-    return new Promise(function (ok, fail) {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', url);
-      xhr.responseType = 'arraybuffer';
-
-      xhr.onload = function () {
-        if (xhr.status == 200 || xhr.status == 206) {
-          player.audio.OfflineContext.decodeAudioData(xhr.response).then(function (data) {
-            player.buffer = data;
-            ok();
-          }, fail);
-        }
-        else {
-          fail(new Error(xhr.statusText));
-        }
-      };
-
-      xhr.onerror = function () {
-        fail(new Error('Unknown error.'));
-      };
-
-      xhr.send();
-    });
+    return Utility.getArrayBuffer(url)
+      .then(function (data) {
+        return player.audio.OfflineContext.decodeAudioData(data);
+      })
+      .then(function (data) {
+        player.buffer = data;
+      });
   };
 
   /**
