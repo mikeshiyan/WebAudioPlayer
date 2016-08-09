@@ -456,6 +456,18 @@
   };
 
   /**
+   * Gets the duration of current audio source.
+   *
+   * @returns {number|undefined}
+   *   The duration in seconds, or undefined if there's no audio source.
+   */
+  WebAudioPlayer.getDuration = function () {
+    if (this.audio.BufferSource) {
+      return this.audio.BufferSource.buffer.duration;
+    }
+  };
+
+  /**
    * Sets the playback volume to new level.
    *
    * @param {number} gain
