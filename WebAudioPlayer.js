@@ -15,6 +15,48 @@
   var Utility = {};
 
   /**
+   * Contains event listeners.
+   *
+   * Object keys are event types, and values are arrays of callbacks.
+   *
+   * @type {object}
+   */
+  Utility.eventListeners = {};
+
+  /**
+   * Registers an event handler of a specific type.
+   *
+   * @param {string} type
+   *   Event type to listen for.
+   * @param {function} callback
+   *   Event handler to call.
+   */
+  Utility.addEventListener = function (type, callback) {
+    if (!(type in this.eventListeners)) {
+      this.eventListeners[type] = [];
+    }
+
+    this.eventListeners[type].push(callback);
+  };
+
+  /**
+   * Dispatches an event.
+   *
+   * @param {string} type
+   *   Event type to dispatch.
+   */
+  Utility.dispatchEvent = function (type) {
+    if (type in this.eventListeners) {
+      var stack = this.eventListeners[type];
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      for (var i = 0, l = stack.length; i < l; i++) {
+        stack[i].apply(null, args);
+      }
+    }
+  };
+
+  /**
    * Makes an XMLHttpRequest to url to get an array buffer.
    *
    * @param {string} url
@@ -48,6 +90,26 @@
 
       xhr.send();
     });
+  };
+
+  /**
+   * Removes an event listener.
+   *
+   * @param {string} type
+   *   Event type to remove.
+   * @param {function} callback
+   *   Event handler to remove.
+   */
+  Utility.removeEventListener = function (type, callback) {
+    if (type in this.eventListeners) {
+      var stack = this.eventListeners[type];
+
+      for (var i = 0, l = stack.length; i < l; i++) {
+        if (stack[i] === callback) {
+          stack.splice(i, 1);
+        }
+      }
+    }
   };
 
   /**
@@ -191,6 +253,8 @@
         State.currentTime = State.offset + Audio.Context.currentTime - State.playStartedAt;
         // Played time is only being increased while playing.
         State.playedTime = State.currentTime - State.skipped;
+
+        Utility.dispatchEvent('playing', State.playedTime, State.currentTime);
       }
       else {
         // Current time needs to reflect the offset while not playing.
@@ -258,6 +322,8 @@
       if (Audio.BufferSource.finished && State.isPlaying) {
         State.isPlaying = false;
         State.skipped = State.offset = Audio.BufferSource.buffer.duration;
+
+        Utility.dispatchEvent('finished');
       }
     };
 
@@ -573,6 +639,40 @@
     if (typeof localStorage != 'undefined') {
       return JSON.parse(localStorage.getItem('WebAudioPlayer.' + key));
     }
+  };
+
+  /**
+   * Registers an event handler of a specific type.
+   *
+   * @param {string} type
+   *   Event type to listen for.
+   * @param {function} callback
+   *   Event handler to call.
+   *
+   * @returns {WebAudioPlayer}
+   *   The WebAudioPlayer object.
+   */
+  WebAudioPlayer.addEventListener = function (type, callback) {
+    Utility.addEventListener(type, callback);
+
+    return this;
+  };
+
+  /**
+   * Removes an event listener.
+   *
+   * @param {string} type
+   *   Event type to remove.
+   * @param {function} callback
+   *   Event handler to remove.
+   *
+   * @returns {WebAudioPlayer}
+   *   The WebAudioPlayer object.
+   */
+  WebAudioPlayer.removeEventListener = function (type, callback) {
+    Utility.removeEventListener(type, callback);
+
+    return this;
   };
 
   window.WebAudioPlayer = WebAudioPlayer.create();
