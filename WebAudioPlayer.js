@@ -553,8 +553,9 @@
    * @param {string} key
    *   Variable key.
    *
-   * @returns {*|null}
-   *   Variable value if it exists in the storage, null otherwise.
+   * @returns {*|null|undefined}
+   *   Variable value if it exists in the storage, null if it doesn't, or
+   *   undefined in case of undefined local storage.
    */
   WebAudioPlayer.readStorage = function (key) {
     if (typeof localStorage != 'undefined') {
