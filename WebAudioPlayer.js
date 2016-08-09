@@ -86,6 +86,18 @@
   State.offset = 0;
 
   /**
+   * Indicates the time the track was actually played.
+   *
+   * This variable contains a number of seconds from the first play() of current
+   * track until its finish or explicit stop(), excluding pauses and skips. It
+   * means that this variable only evenly increases when playing and never jumps
+   * back or forward.
+   *
+   * @type {number}
+   */
+  State.playedTime = 0;
+
+  /**
    * Indicates the most recent moment when the playback was started.
    *
    * This variable contains a number of seconds on the AudioContext time line.
@@ -93,6 +105,16 @@
    * @type {number}
    */
   State.playStartedAt = 0;
+
+  /**
+   * Contains the total amount of time skipped when changing playback positions.
+   *
+   * This variable contains a sum of time jumps in seconds. The number can be
+   * negative in case of backward jumps.
+   *
+   * @type {number}
+   */
+  State.skipped = 0;
 
   /**
    * Holds various Audio objects created from AudioContext.
@@ -169,8 +191,11 @@
     this.ScriptProcessor.onaudioprocess = function () {
       if (State.isPlaying) {
         State.currentTime = State.offset + audio.Context.currentTime - State.playStartedAt;
+        // Played time is only being increased while playing.
+        State.playedTime = State.currentTime - State.skipped;
       }
       else {
+        // Current time needs to reflect the offset while not playing.
         State.currentTime = State.offset;
       }
     };
@@ -214,8 +239,15 @@
    */
   Audio.start = function (buffer) {
     var audio = this;
+    var offset = Math.max(State.offset, 0);
+    var duration = Math.max(buffer.duration - offset, 0);
 
     State.isPlaying = true;
+
+    // Reset some state variables if it's another audio file.
+    if (this.BufferSource && this.BufferSource.buffer != buffer) {
+      State.skipped = offset;
+    }
 
     this.BufferSource = this.Context.createBufferSource();
     this.BufferSource.connect(this.Analyser);
@@ -228,12 +260,9 @@
       // 'playing'. This means that no new source was started.
       if (audio.BufferSource.finished && State.isPlaying) {
         State.isPlaying = false;
-        State.offset = audio.BufferSource.buffer.duration;
+        State.skipped = State.offset = audio.BufferSource.buffer.duration;
       }
     };
-
-    var offset = Math.max(State.offset, 0);
-    var duration = Math.max(this.BufferSource.buffer.duration - offset, 0);
 
     State.playStartedAt = this.Context.currentTime;
     this.BufferSource.start(0, offset, duration);
@@ -339,14 +368,18 @@
   };
 
   /**
-   * Stops the playback and sets the position to the start.
+   * Stops the playback and resets the track state.
+   *
+   * This method resets the current time position and the skipped time counter,
+   * which impacts the played time in the way that next play() will count it
+   * from 0.
    *
    * @returns {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.stop = function () {
     this.audio.stop();
-    State.offset = 0;
+    State.skipped = State.offset = 0;
 
     return this;
   };
@@ -387,6 +420,8 @@
       throw new TypeError('Offset parameter accepts non-negative numbers only.');
     }
 
+    State.skipped += offset - State.currentTime;
+
     if (State.isPlaying) {
       this.audio.stop();
       State.offset = offset;
@@ -407,6 +442,17 @@
    */
   WebAudioPlayer.getPosition = function () {
     return State.currentTime;
+  };
+
+  /**
+   * Gets the time the track was actually played.
+   *
+   * @returns {number}
+   *   Seconds from the first play() of current track, excluding pauses and
+   *   skips.
+   */
+  WebAudioPlayer.getPlayedTime = function () {
+    return State.playedTime;
   };
 
   /**
