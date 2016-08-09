@@ -179,8 +179,6 @@
    *   The Audio object.
    */
   Audio.create = function () {
-    var audio = this;
-
     this.Context = new (window.AudioContext || window.webkitAudioContext);
     this.OfflineContext = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, this.Context.sampleRate);
 
@@ -190,7 +188,7 @@
 
     this.ScriptProcessor.onaudioprocess = function () {
       if (State.isPlaying) {
-        State.currentTime = State.offset + audio.Context.currentTime - State.playStartedAt;
+        State.currentTime = State.offset + Audio.Context.currentTime - State.playStartedAt;
         // Played time is only being increased while playing.
         State.playedTime = State.currentTime - State.skipped;
       }
@@ -238,7 +236,6 @@
    *   The AudioBuffer object.
    */
   Audio.start = function (buffer) {
-    var audio = this;
     var offset = Math.max(State.offset, 0);
     var duration = Math.max(buffer.duration - offset, 0);
 
@@ -258,9 +255,9 @@
 
       // Check if the actual source object is finished, but the state is still
       // 'playing'. This means that no new source was started.
-      if (audio.BufferSource.finished && State.isPlaying) {
+      if (Audio.BufferSource.finished && State.isPlaying) {
         State.isPlaying = false;
-        State.skipped = State.offset = audio.BufferSource.buffer.duration;
+        State.skipped = State.offset = Audio.BufferSource.buffer.duration;
       }
     };
 
@@ -289,13 +286,6 @@
   var WebAudioPlayer = {};
 
   /**
-   * Contains a public reference to the Audio object.
-   *
-   * @type {Audio}
-   */
-  WebAudioPlayer.audio = null;
-
-  /**
    * Contains raw audio data.
    *
    * @type {AudioBuffer}
@@ -309,7 +299,7 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.create = function () {
-    this.audio = Audio.create();
+    Audio.create();
 
     var data;
     if (data = this.readStorage('eq')) {
@@ -320,6 +310,16 @@
     }
 
     return this;
+  };
+
+  /**
+   * Returns the Audio object.
+   *
+   * @returns {Audio}
+   *   The Audio object.
+   */
+  WebAudioPlayer.getAudio = function () {
+    return Audio;
   };
 
   /**
@@ -339,7 +339,7 @@
 
     return Utility.getArrayBuffer(url)
       .then(function (data) {
-        return player.audio.OfflineContext.decodeAudioData(data);
+        return Audio.OfflineContext.decodeAudioData(data);
       })
       .then(function (data) {
         player.buffer = data;
@@ -361,7 +361,7 @@
     }
 
     if (!State.isPlaying) {
-      this.audio.start(this.buffer);
+      Audio.start(this.buffer);
     }
 
     return this;
@@ -378,7 +378,7 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.stop = function () {
-    this.audio.stop();
+    Audio.stop();
     State.skipped = State.offset = 0;
 
     return this;
@@ -392,12 +392,12 @@
    */
   WebAudioPlayer.pause = function () {
     var wasPlaying = State.isPlaying;
-    this.audio.stop();
+    Audio.stop();
 
     if (wasPlaying) {
       // Do not use State.currentTime directly, because it's calculated
       // asynchronously and based on offset.
-      State.offset += this.audio.Context.currentTime - State.playStartedAt;
+      State.offset += Audio.Context.currentTime - State.playStartedAt;
     }
 
     return this;
@@ -423,7 +423,7 @@
     State.skipped += offset - State.currentTime;
 
     if (State.isPlaying) {
-      this.audio.stop();
+      Audio.stop();
       State.offset = offset;
       this.play();
     }
@@ -462,8 +462,8 @@
    *   The duration in seconds, or undefined if there's no audio source.
    */
   WebAudioPlayer.getDuration = function () {
-    if (this.audio.BufferSource) {
-      return this.audio.BufferSource.buffer.duration;
+    if (Audio.BufferSource) {
+      return Audio.BufferSource.buffer.duration;
     }
   };
 
@@ -477,7 +477,7 @@
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.setVolume = function (gain) {
-    this.audio.Gain.gain.value = gain;
+    Audio.Gain.gain.value = gain;
 
     return this.updateStorage('vol', gain);
   };
@@ -489,7 +489,7 @@
    *   Previously set value.
    */
   WebAudioPlayer.getVolume = function () {
-    return this.audio.Gain.gain.value;
+    return Audio.Gain.gain.value;
   };
 
   /**
@@ -506,8 +506,8 @@
    */
   WebAudioPlayer.setEq = function (bands) {
     for (var i in bands) {
-      if (bands.hasOwnProperty(i) && this.audio.filters[i]) {
-        this.audio.filters[i].gain.value = bands[i];
+      if (bands.hasOwnProperty(i) && Audio.filters[i]) {
+        Audio.filters[i].gain.value = bands[i];
       }
     }
 
@@ -523,7 +523,7 @@
   WebAudioPlayer.getEq = function () {
     var bands = [];
 
-    this.audio.filters.forEach(function (filter) {
+    Audio.filters.forEach(function (filter) {
       bands.push(filter.gain.value);
     });
 
