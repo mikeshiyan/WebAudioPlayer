@@ -391,8 +391,12 @@
   /**
    * Loads the audio file by URL into buffer.
    *
-   * @param {string} url
-   *   URL of the file.
+   * This method takes an array of URLs (presumably pointing to the same audio
+   * file) as the only argument, and will stop and fulfill the promise after
+   * the first valid audio URL found.
+   *
+   * @param {string[]} urls
+   *   An array of mirror URLs.
    *
    * @returns {Promise}
    *   The Promise object.
@@ -400,15 +404,21 @@
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
-  WebAudioPlayer.loadUrl = function (url) {
+  WebAudioPlayer.loadUrl = function (urls) {
     var player = this;
 
-    return Utility.getArrayBuffer(url)
-      .then(function (data) {
-        return Audio.OfflineContext.decodeAudioData(data);
-      })
+    return urls.reduce(function (sequence, url) {
+      return sequence.catch(function () {
+        return Utility.getArrayBuffer(url).then(function (data) {
+          return Audio.OfflineContext.decodeAudioData(data);
+        });
+      });
+    }, Promise.reject())
       .then(function (data) {
         player.buffer = data;
+      })
+      .catch(function () {
+        throw new Error('No valid audio URLs provided.');
       });
   };
 
