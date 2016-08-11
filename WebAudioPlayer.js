@@ -74,7 +74,7 @@
    * @param {string} url
    *   URL to get.
    *
-   * @returns {Promise}
+   * @return {Promise}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {ArrayBuffer} The ArrayBuffer object.
@@ -177,7 +177,7 @@
   /**
    * Creates Audio object.
    *
-   * @returns {Audio}
+   * @return {Audio}
    *   The Audio object.
    */
   Audio.create = function () {
@@ -519,7 +519,7 @@
   /**
    * Creates WebAudioPlayer object.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.create = function () {
@@ -539,7 +539,7 @@
   /**
    * Returns the Audio object.
    *
-   * @returns {Audio}
+   * @return {Audio}
    *   The Audio object.
    */
   WebAudioPlayer.getAudio = function () {
@@ -556,7 +556,7 @@
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @returns {Promise}
+   * @return {Promise}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {Track} The Track object.
@@ -585,7 +585,7 @@
    * @param {number} gain
    *   Number between 0 and 1.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.setVolume = function (gain) {
@@ -597,7 +597,7 @@
   /**
    * Gets the current value of the playback volume level.
    *
-   * @returns {number}
+   * @return {number}
    *   Previously set value.
    */
   WebAudioPlayer.getVolume = function () {
@@ -613,7 +613,7 @@
    *   All elements of the object are optional, so setting less than 10 elements
    *   will leave unspecified bands in previous state.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.setEq = function (bands) {
@@ -629,7 +629,7 @@
   /**
    * Gets the current band levels of the equalizer.
    *
-   * @returns {number[]}
+   * @return {number[]}
    *   Array of 10 numbers.
    */
   WebAudioPlayer.getEq = function () {
@@ -650,7 +650,7 @@
    * @param {*} value
    *   Variable value.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.updateStorage = function (key, value) {
@@ -667,7 +667,7 @@
    * @param {string} key
    *   Variable key.
    *
-   * @returns {*|null|undefined}
+   * @return {*|null|undefined}
    *   Variable value if it exists in the storage, null if it doesn't, or
    *   undefined in case of undefined local storage.
    */
@@ -685,7 +685,7 @@
    * @param {function} callback
    *   Event handler to call.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.addEventListener = function (type, callback) {
@@ -702,7 +702,7 @@
    * @param {function} callback
    *   Event handler to remove.
    *
-   * @returns {WebAudioPlayer}
+   * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
   WebAudioPlayer.removeEventListener = function (type, callback) {
