@@ -126,72 +126,6 @@
   };
 
   /**
-   * Contains various operational data.
-   *
-   * @type {object}
-   */
-  var State = {};
-
-  /**
-   * Indicates the current playback position.
-   *
-   * This variable contains a number of seconds from the start of an audio file.
-   *
-   * @type {number}
-   */
-  State.currentTime = 0;
-
-  /**
-   * Indicates whether an audio is currently playing.
-   *
-   * @type {boolean}
-   */
-  State.isPlaying = false;
-
-  /**
-   * Indicates the offset with which the most recent playback was started.
-   *
-   * This variable contains a number of seconds from the start of an audio file.
-   * Offset must be changed only when !State.isPlaying, because other variables
-   * (for example, currentTime) are calculated based on it and current playback
-   * state.
-   *
-   * @type {number}
-   */
-  State.offset = 0;
-
-  /**
-   * Indicates the time the track was actually played.
-   *
-   * This variable contains a number of seconds from the first play() of current
-   * track until its finish or explicit stop(), excluding pauses and skips. It
-   * means that this variable only evenly increases when playing and never jumps
-   * back or forward.
-   *
-   * @type {number}
-   */
-  State.playedTime = 0;
-
-  /**
-   * Indicates the most recent moment when the playback was started.
-   *
-   * This variable contains a number of seconds on the AudioContext time line.
-   *
-   * @type {number}
-   */
-  State.playStartedAt = 0;
-
-  /**
-   * Contains the total amount of time skipped when changing playback positions.
-   *
-   * This variable contains a sum of time jumps in seconds. The number can be
-   * negative in case of backward jumps.
-   *
-   * @type {number}
-   */
-  State.skipped = 0;
-
-  /**
    * Holds various Audio objects created from AudioContext.
    *
    * @type {object}
@@ -204,13 +138,6 @@
    * @type {AnalyserNode}
    */
   Audio.Analyser = null;
-
-  /**
-   * The AudioBufferSourceNode object.
-   *
-   * @type {AudioBufferSourceNode}
-   */
-  Audio.BufferSource = null;
 
   /**
    * The AudioContext object.
@@ -261,18 +188,24 @@
     this.Gain = this.Context.createGain();
     this.ScriptProcessor = this.Context.createScriptProcessor();
 
+    /**
+     * Runs code while audio is processing.
+     *
+     * @fires audioprocess
+     */
     this.ScriptProcessor.onaudioprocess = function () {
-      if (State.isPlaying) {
-        State.currentTime = State.offset + Audio.Context.currentTime - State.playStartedAt;
-        // Played time is only being increased while playing.
-        State.playedTime = State.currentTime - State.skipped;
 
-        Utility.dispatchEvent('playing', State.playedTime, State.currentTime);
-      }
-      else {
-        // Current time needs to reflect the offset while not playing.
-        State.currentTime = State.offset;
-      }
+      /**
+       * Indicates that audio is processing.
+       *
+       * This event is fired constantly during the life of an Audio object and
+       * should not be generally listened for. Track objects use this event to
+       * fire their own 'playing' event to indicate when the corresponding track
+       * is actually playing.
+       *
+       * @event audioprocess
+       */
+      Utility.dispatchEvent('audioprocess');
     };
 
     this.filters = [];
@@ -301,60 +234,279 @@
   };
 
   /**
-   * Starts playing audio from buffer.
+   * Constructs a Track object.
    *
-   * This method creates new audio source, connects it, and starts playback
-   * immediately. Offset and duration parameters are taken in real time from
-   * the State object.
-   *
-   * This method also updates the State object with actual values.
+   * @constructor
    *
    * @param {AudioBuffer} buffer
-   *   The AudioBuffer object.
+   *   The AudioBuffer object containing raw audio data.
    */
-  Audio.start = function (buffer) {
-    var offset = Math.max(State.offset, 0);
-    var duration = Math.max(buffer.duration - offset, 0);
+  var Track = function (buffer) {
 
-    State.isPlaying = true;
+    /**
+     * Indicates whether an audio is currently playing.
+     *
+     * @type {boolean}
+     */
+    var isPlaying = false;
 
-    // Reset some state variables if it's another audio file.
-    if (this.BufferSource && this.BufferSource.buffer != buffer) {
-      State.skipped = offset;
-    }
+    /**
+     * Indicates the offset with which the most recent playback was started.
+     *
+     * This variable contains a number of seconds from the start of an audio
+     * file.
+     * Offset must be changed only when !isPlaying, because other numbers (for
+     * example, the current time) are calculated based on it and current
+     * playback state.
+     *
+     * @type {number}
+     */
+    var offset = 0;
 
-    this.BufferSource = this.Context.createBufferSource();
-    this.BufferSource.connect(this.Analyser);
-    this.BufferSource.buffer = buffer;
+    /**
+     * Indicates the time the track was actually played.
+     *
+     * This variable contains a number of seconds from the first play() of
+     * a track until its finish or explicit stop(), excluding pauses and skips.
+     * It means that this variable only evenly increases when playing and never
+     * jumps back or forward.
+     *
+     * @type {number}
+     */
+    var playedTime = 0;
 
-    this.BufferSource.onended = function () {
-      this.finished = true;
+    /**
+     * Indicates the most recent moment when the playback was started.
+     *
+     * This variable contains a number of seconds on the AudioContext time line.
+     *
+     * @type {number}
+     */
+    var playStartedAt = 0;
 
-      // Check if the actual source object is finished, but the state is still
-      // 'playing'. This means that no new source was started.
-      if (Audio.BufferSource.finished && State.isPlaying) {
-        State.isPlaying = false;
-        State.skipped = State.offset = Audio.BufferSource.buffer.duration;
+    /**
+     * Contains the total time skipped when changing playback positions.
+     *
+     * This variable contains a sum of time jumps in seconds. The number can be
+     * negative in case of backward jumps.
+     *
+     * @type {number}
+     */
+    var skipped = 0;
 
-        Utility.dispatchEvent('finished');
+    /**
+     * Contains an AudioBufferSourceNode object.
+     *
+     * @type {AudioBufferSourceNode}
+     */
+    var source = null;
+
+    /**
+     * Contains this Track object.
+     *
+     * @type {Track}
+     */
+    var track = this;
+
+    /**
+     * Makes the routine work while track is playing.
+     *
+     * @fires playing
+     */
+    var audioprocess = function () {
+      if (isPlaying) {
+        // Played time is only being increased while playing. When not playing
+        // it remains with the same value, not minding of actual value of
+        // the 'skipped' var.
+        playedTime = track.getCurrentTime() - skipped;
+
+        /**
+         * Indicates that the track is playing.
+         *
+         * @param {Track} track
+         *   The Track object.
+         *
+         * @event playing
+         */
+        Utility.dispatchEvent('playing', track);
       }
     };
 
-    State.playStartedAt = this.Context.currentTime;
-    this.BufferSource.start(0, offset, duration);
-  };
+    /**
+     * Plays the loaded audio file or resumes the playback from pause.
+     *
+     * @return {Track}
+     *   The Track object.
+     */
+    this.play = function () {
+      if (!isPlaying) {
+        isPlaying = true;
+        offset = Math.max(offset, 0);
+        var duration = Math.max(buffer.duration - offset, 0);
 
-  /**
-   * Stops playing audio.
-   *
-   * This method also updates the State object with actual values.
-   */
-  Audio.stop = function () {
-    State.isPlaying = false;
+        Utility.addEventListener('audioprocess', audioprocess);
 
-    if (this.BufferSource) {
-      this.BufferSource.stop();
-    }
+        source = Audio.Context.createBufferSource();
+        source.connect(Audio.Analyser);
+        source.buffer = buffer;
+
+        /**
+         * Runs code in response to the audio track finishing playback.
+         *
+         * @fires finished
+         */
+        source.onended = function () {
+          this.finished = true;
+
+          // Check if the actual source object is finished, but the state is
+          // still 'playing'. This means that no new source started for current
+          // track.
+          if (source.finished && isPlaying) {
+            isPlaying = false;
+            skipped = offset = buffer.duration;
+
+            /**
+             * Indicates that the track has finished playing.
+             *
+             * @param {Track} track
+             *   The Track object.
+             *
+             * @event finished
+             */
+            Utility.dispatchEvent('finished', track);
+            Utility.removeEventListener('audioprocess', audioprocess);
+          }
+        };
+
+        playStartedAt = Audio.Context.currentTime;
+        source.start(0, offset, duration);
+      }
+
+      return this;
+    };
+
+    /**
+     * Stops the playback and resets the track state.
+     *
+     * This method resets the current time position and the skipped time
+     * counter, which impacts the played time in the way that next play() will
+     * count it from 0.
+     *
+     * @return {Track}
+     *   The Track object.
+     */
+    this.stop = function () {
+      isPlaying = false;
+
+      if (source) {
+        source.stop();
+      }
+
+      skipped = offset = 0;
+      Utility.removeEventListener('audioprocess', audioprocess);
+
+      return this;
+    };
+
+    /**
+     * Pauses the playback.
+     *
+     * @return {Track}
+     *   The Track object.
+     */
+    this.pause = function () {
+      var wasPlaying = isPlaying;
+      isPlaying = false;
+
+      if (source) {
+        source.stop();
+      }
+
+      if (wasPlaying) {
+        offset += Audio.Context.currentTime - playStartedAt;
+      }
+
+      Utility.removeEventListener('audioprocess', audioprocess);
+
+      return this;
+    };
+
+    /**
+     * Seeks on an audio track.
+     *
+     * @param {number} newOffset
+     *   Seconds from the start of an audio file.
+     *
+     * @return {Track}
+     *   The Track object.
+     *
+     * @throws {TypeError}
+     *   If provided offset is negative.
+     */
+    this.seek = function (newOffset) {
+      if (newOffset < 0) {
+        throw new TypeError('Offset parameter accepts non-negative numbers only.');
+      }
+
+      skipped += newOffset - this.getCurrentTime();
+
+      if (isPlaying) {
+        isPlaying = false;
+
+        if (source) {
+          source.stop();
+        }
+
+        offset = newOffset;
+        this.play();
+      }
+      else {
+        offset = newOffset;
+      }
+
+      return this;
+    };
+
+    /**
+     * Gets the current playback position.
+     *
+     * @return {number}
+     *   Seconds from the start of an audio file.
+     */
+    this.getCurrentTime = function () {
+      return isPlaying ? Audio.Context.currentTime - playStartedAt + offset : offset;
+    };
+
+    /**
+     * Gets the time the track was actually played.
+     *
+     * @return {number}
+     *   Seconds from the first play() of a track, excluding pauses and skips.
+     */
+    this.getPlayedTime = function () {
+      return playedTime;
+    };
+
+    /**
+     * Gets the duration of a track.
+     *
+     * @return {number}
+     *   The duration in seconds.
+     */
+    this.getDuration = function () {
+      return buffer.duration;
+    };
+
+    /**
+     * Indicates whether a track is currently playing.
+     *
+     * @return {boolean}
+     *   True if audio is playing, false otherwise.
+     */
+    this.isPlaying = function () {
+      return isPlaying;
+    };
+
   };
 
   /**
@@ -363,13 +515,6 @@
    * @type {object}
    */
   var WebAudioPlayer = {};
-
-  /**
-   * Contains raw audio data.
-   *
-   * @type {AudioBuffer}
-   */
-  WebAudioPlayer.buffer = null;
 
   /**
    * Creates WebAudioPlayer object.
@@ -413,13 +558,12 @@
    *
    * @returns {Promise}
    *   The Promise object.
-   *   Fulfill callback won't receive arguments.
+   *   Fulfill callback arguments:
+   *   - {Track} The Track object.
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
   WebAudioPlayer.loadUrl = function (urls) {
-    var player = this;
-
     return urls.reduce(function (sequence, url) {
       return sequence.catch(function () {
         return Utility.getArrayBuffer(url).then(function (data) {
@@ -428,132 +572,11 @@
       });
     }, Promise.reject())
       .then(function (data) {
-        player.buffer = data;
+        return new Track(data);
       })
       .catch(function () {
         throw new Error('No valid audio URLs provided.');
       });
-  };
-
-  /**
-   * Plays the loaded audio file or resumes the playback from pause.
-   *
-   * @returns {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   *
-   * @throws {Error}
-   *   If audio file is not loaded prior to call this method.
-   */
-  WebAudioPlayer.play = function () {
-    if (!this.buffer) {
-      throw new Error('Audio file is not loaded.');
-    }
-
-    if (!State.isPlaying) {
-      Audio.start(this.buffer);
-    }
-
-    return this;
-  };
-
-  /**
-   * Stops the playback and resets the track state.
-   *
-   * This method resets the current time position and the skipped time counter,
-   * which impacts the played time in the way that next play() will count it
-   * from 0.
-   *
-   * @returns {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.stop = function () {
-    Audio.stop();
-    State.skipped = State.offset = 0;
-
-    return this;
-  };
-
-  /**
-   * Pauses the playback.
-   *
-   * @returns {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.pause = function () {
-    var wasPlaying = State.isPlaying;
-    Audio.stop();
-
-    if (wasPlaying) {
-      // Do not use State.currentTime directly, because it's calculated
-      // asynchronously and based on offset.
-      State.offset += Audio.Context.currentTime - State.playStartedAt;
-    }
-
-    return this;
-  };
-
-  /**
-   * Sets the playback position.
-   *
-   * @param {number} offset
-   *   Seconds from the start of an audio file.
-   *
-   * @returns {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   *
-   * @throws {TypeError}
-   *   If offset is negative.
-   */
-  WebAudioPlayer.setPosition = function (offset) {
-    if (offset < 0) {
-      throw new TypeError('Offset parameter accepts non-negative numbers only.');
-    }
-
-    State.skipped += offset - State.currentTime;
-
-    if (State.isPlaying) {
-      Audio.stop();
-      State.offset = offset;
-      this.play();
-    }
-    else {
-      State.offset = offset;
-    }
-
-    return this;
-  };
-
-  /**
-   * Gets the current playback position.
-   *
-   * @returns {number}
-   *   Seconds from the start of an audio file.
-   */
-  WebAudioPlayer.getPosition = function () {
-    return State.currentTime;
-  };
-
-  /**
-   * Gets the time the track was actually played.
-   *
-   * @returns {number}
-   *   Seconds from the first play() of current track, excluding pauses and
-   *   skips.
-   */
-  WebAudioPlayer.getPlayedTime = function () {
-    return State.playedTime;
-  };
-
-  /**
-   * Gets the duration of current audio source.
-   *
-   * @returns {number|undefined}
-   *   The duration in seconds, or undefined if there's no audio source.
-   */
-  WebAudioPlayer.getDuration = function () {
-    if (Audio.BufferSource) {
-      return Audio.BufferSource.buffer.duration;
-    }
   };
 
   /**
@@ -617,16 +640,6 @@
     });
 
     return bands;
-  };
-
-  /**
-   * Indicates whether an audio is currently playing.
-   *
-   * @returns {boolean}
-   *   True if audio is playing, false otherwise.
-   */
-  WebAudioPlayer.isPlaying = function () {
-    return State.isPlaying;
   };
 
   /**
