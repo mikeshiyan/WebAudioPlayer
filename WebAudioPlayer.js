@@ -36,7 +36,19 @@
       this.eventListeners[type] = [];
     }
 
-    this.eventListeners[type].push(callback);
+    var stack = this.eventListeners[type];
+    var exists = false;
+
+    for (var i = 0, l = stack.length; i < l; i++) {
+      if (stack[i] === callback) {
+        exists = true;
+        break;
+      }
+    }
+
+    if (!exists) {
+      this.eventListeners[type].push(callback);
+    }
   };
 
   /**
@@ -107,6 +119,7 @@
       for (var i = 0, l = stack.length; i < l; i++) {
         if (stack[i] === callback) {
           stack.splice(i, 1);
+          break;
         }
       }
     }
