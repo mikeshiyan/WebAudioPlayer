@@ -10,7 +10,7 @@
   /**
    * Contains various utility methods.
    *
-   * @type {object}
+   * @namespace
    */
   var Utility = {};
 
@@ -128,7 +128,7 @@
   /**
    * Holds various Audio objects created from AudioContext.
    *
-   * @type {object}
+   * @namespace
    */
   var Audio = {};
 
@@ -521,7 +521,7 @@
   /**
    * Provides an audio player.
    *
-   * @type {object}
+   * @namespace
    */
   var WebAudioPlayer = {};
 
