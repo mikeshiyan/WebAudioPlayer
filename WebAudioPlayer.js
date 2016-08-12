@@ -88,7 +88,7 @@
       xhr.responseType = 'arraybuffer';
 
       xhr.onload = function () {
-        if (xhr.status == 200 || xhr.status == 206) {
+        if (xhr.status === 200 || xhr.status === 206) {
           ok(xhr.response);
         }
         else {
@@ -211,10 +211,19 @@
     this.filters = [];
     var frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
 
-    for (var i in frequencies) {
+    for (var i = 0; i < 10; i++) {
       this.filters[i] = this.Context.createBiquadFilter();
       this.filters[i].frequency.value = frequencies[i];
-      this.filters[i].type = i == 0 ? 'lowshelf' : i == 9 ? 'highshelf' : 'peaking';
+
+      if (i === 0) {
+        this.filters[0].type = 'lowshelf';
+      }
+      else if (i === 9) {
+        this.filters[9].type = 'highshelf';
+      }
+      else {
+        this.filters[i].type = 'peaking';
+      }
 
       if (i > 0) {
         this.filters[i - 1].connect(this.filters[i]);
@@ -525,12 +534,14 @@
   WebAudioPlayer.create = function () {
     Audio.create();
 
-    var data;
-    if (data = this.readStorage('eq')) {
-      this.setEq(data);
+    var eq = this.readStorage('eq');
+    var vol = this.readStorage('vol');
+
+    if (eq) {
+      this.setEq(eq);
     }
-    if (data = this.readStorage('vol')) {
-      this.setVolume(data);
+    if (vol) {
+      this.setVolume(vol);
     }
 
     return this;
