@@ -24,6 +24,15 @@
   Utility.eventListeners = {};
 
   /**
+   * Contains promises about loading URLs.
+   *
+   * Object keys are URLs, and values are Promise objects.
+   *
+   * @type {object}
+   */
+  Utility.urlPromises = {};
+
+  /**
    * Registers an event handler of a specific type.
    *
    * @param {string} type
@@ -105,6 +114,27 @@
   };
 
   /**
+   * Gets a promise about loading URLs.
+   *
+   * @param {string[]} urls
+   *   An array of mirror URLs.
+   *
+   * @return {Promise|undefined}
+   *   The Promise object if one exists at least for one of given URLs.
+   *   Fulfill callback arguments:
+   *   - {Track} The Track object.
+   *   Reject callback arguments:
+   *   - {Error} The Error object.
+   */
+  Utility.getUrlPromise = function (urls) {
+    for (var i in urls) {
+      if (urls.hasOwnProperty(i) && Utility.urlPromises[urls[i]]) {
+        return Utility.urlPromises[urls[i]];
+      }
+    }
+  };
+
+  /**
    * Removes an event listener.
    *
    * @param {string} type
@@ -123,6 +153,32 @@
         }
       }
     }
+  };
+
+  /**
+   * Removes promises about loading URLs.
+   *
+   * @param {string[]} urls
+   *   An array of mirror URLs.
+   */
+  Utility.removeUrlPromise = function (urls) {
+    urls.forEach(function (url) {
+      delete Utility.urlPromises[url];
+    });
+  };
+
+  /**
+   * Saves the promise about loading URLs in temporary static cache.
+   *
+   * @param {string[]} urls
+   *   An array of mirror URLs.
+   * @param {Promise} promise
+   *   The Promise object.
+   */
+  Utility.setUrlPromise = function (urls, promise) {
+    urls.forEach(function (url) {
+      Utility.urlPromises[url] = promise;
+    });
   };
 
   /**
@@ -564,6 +620,10 @@
    * file) as the only argument, and will stop and fulfill the promise after
    * the first valid audio URL found.
    *
+   * Multiple simultaneous calls to this method providing the same (or
+   * intersecting) URL sets will receive the same Promise object, which when
+   * fulfilled will return the same Track object for all callers.
+   *
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
@@ -575,19 +635,28 @@
    *   - {Error} The Error object.
    */
   WebAudioPlayer.loadUrl = function (urls) {
-    return urls.reduce(function (sequence, url) {
-      return sequence.catch(function () {
-        return Utility.getArrayBuffer(url).then(function (data) {
-          return Audio.OfflineContext.decodeAudioData(data);
+    var promise = Utility.getUrlPromise(urls);
+
+    if (!promise) {
+      promise = urls.reduce(function (sequence, url) {
+        return sequence.catch(function () {
+          return Utility.getArrayBuffer(url).then(function (data) {
+            return Audio.OfflineContext.decodeAudioData(data);
+          });
         });
-      });
-    }, Promise.reject())
-      .then(function (data) {
-        return new Track(data);
-      })
-      .catch(function () {
-        throw new Error('No valid audio URLs provided.');
-      });
+      }, Promise.reject())
+        .then(function (data) {
+          Utility.removeUrlPromise(urls);
+          return new Track(data);
+        })
+        .catch(function () {
+          throw new Error('No valid audio URLs provided.');
+        });
+
+      Utility.setUrlPromise(urls, promise);
+    }
+
+    return promise;
   };
 
   /**
