@@ -182,87 +182,47 @@
   };
 
   /**
-   * Holds various Audio objects created from AudioContext.
+   * Reads data from the storage.
    *
-   * @namespace
+   * @param {string} key
+   *   Variable key.
+   *
+   * @return {*|null|undefined}
+   *   Variable value if it exists in the storage, null if it doesn't, or
+   *   undefined in case of undefined local storage.
    */
-  var Audio = {};
+  Utility.readStorage = function (key) {
+    if (typeof localStorage != 'undefined') {
+      return JSON.parse(localStorage.getItem('WebAudioPlayer.' + key));
+    }
+  };
 
   /**
-   * The AnalyserNode object.
+   * Updates data in the storage.
    *
-   * @type {AnalyserNode}
+   * @param {string} key
+   *   Variable key.
+   * @param {*} value
+   *   Variable value.
    */
-  Audio.Analyser = null;
+  Utility.updateStorage = function (key, value) {
+    if (typeof localStorage != 'undefined') {
+      localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
+    }
+  };
 
   /**
-   * The AudioContext object.
+   * Constructs an Audio object.
    *
-   * @type {AudioContext}
+   * @constructor
    */
-  Audio.Context = null;
-
-  /**
-   * The GainNode object.
-   *
-   * @type {GainNode}
-   */
-  Audio.Gain = null;
-
-  /**
-   * The OfflineAudioContext object.
-   *
-   * @type {OfflineAudioContext}
-   */
-  Audio.OfflineContext = null;
-
-  /**
-   * The ScriptProcessorNode object.
-   *
-   * @type {ScriptProcessorNode}
-   */
-  Audio.ScriptProcessor = null;
-
-  /**
-   * Array of BiquadFilterNode objects.
-   *
-   * @type {BiquadFilterNode[]}
-   */
-  Audio.filters = [];
-
-  /**
-   * Creates Audio object.
-   *
-   * @return {Audio}
-   *   The Audio object.
-   */
-  Audio.create = function () {
+  var Audio = function () {
     this.Context = new (window.AudioContext || window.webkitAudioContext);
     this.OfflineContext = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, this.Context.sampleRate);
 
     this.Analyser = this.Context.createAnalyser();
     this.Gain = this.Context.createGain();
     this.ScriptProcessor = this.Context.createScriptProcessor();
-
-    /**
-     * Runs code while audio is processing.
-     *
-     * @fires audioprocess
-     */
-    this.ScriptProcessor.onaudioprocess = function () {
-
-      /**
-       * Indicates that audio is processing.
-       *
-       * This event is fired constantly during the life of an Audio object and
-       * should not be generally listened for. Track objects use this event to
-       * fire their own 'playing' event to indicate when the corresponding track
-       * is actually playing.
-       *
-       * @event audioprocess
-       */
-      Utility.dispatchEvent('audioprocess');
-    };
 
     this.filters = [];
     var frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
@@ -294,9 +254,49 @@
 
     this.ScriptProcessor
       .connect(this.Context.destination);
-
-    return this;
   };
+
+  /**
+   * The AnalyserNode object.
+   *
+   * @type {AnalyserNode}
+   */
+  Audio.prototype.Analyser = null;
+
+  /**
+   * The AudioContext object.
+   *
+   * @type {AudioContext}
+   */
+  Audio.prototype.Context = null;
+
+  /**
+   * The GainNode object.
+   *
+   * @type {GainNode}
+   */
+  Audio.prototype.Gain = null;
+
+  /**
+   * The OfflineAudioContext object.
+   *
+   * @type {OfflineAudioContext}
+   */
+  Audio.prototype.OfflineContext = null;
+
+  /**
+   * The ScriptProcessorNode object.
+   *
+   * @type {ScriptProcessorNode}
+   */
+  Audio.prototype.ScriptProcessor = null;
+
+  /**
+   * Array of BiquadFilterNode objects.
+   *
+   * @type {BiquadFilterNode[]}
+   */
+  Audio.prototype.filters = [];
 
   /**
    * Constructs a Track object.
@@ -305,8 +305,10 @@
    *
    * @param {AudioBuffer} buffer
    *   The AudioBuffer object containing raw audio data.
+   * @param {WebAudioPlayer} player
+   *   The WebAudioPlayer object.
    */
-  var Track = function (buffer) {
+  var Track = function (buffer, player) {
 
     /**
      * Indicates whether an audio is currently playing.
@@ -411,8 +413,8 @@
 
         Utility.addEventListener('audioprocess', audioprocess);
 
-        source = Audio.Context.createBufferSource();
-        source.connect(Audio.Analyser);
+        source = player.getAudio().Context.createBufferSource();
+        source.connect(player.getAudio().Analyser);
         source.buffer = buffer;
 
         /**
@@ -443,7 +445,7 @@
           }
         };
 
-        playStartedAt = Audio.Context.currentTime;
+        playStartedAt = player.getAudio().Context.currentTime;
         source.start(0, offset, duration);
       }
 
@@ -488,7 +490,7 @@
       }
 
       if (wasPlaying) {
-        offset += Audio.Context.currentTime - playStartedAt;
+        offset += player.getAudio().Context.currentTime - playStartedAt;
       }
 
       Utility.removeEventListener('audioprocess', audioprocess);
@@ -539,7 +541,7 @@
      *   Seconds from the start of an audio file.
      */
     this.getCurrentTime = function () {
-      return isPlaying ? Audio.Context.currentTime - playStartedAt + offset : offset;
+      return isPlaying ? player.getAudio().Context.currentTime - playStartedAt + offset : offset;
     };
 
     /**
@@ -575,23 +577,51 @@
   };
 
   /**
-   * Provides an audio player.
+   * Constructs a WebAudioPlayer object.
    *
-   * @namespace
+   * @constructor
    */
-  var WebAudioPlayer = {};
+  var WebAudioPlayer = function () {
 
-  /**
-   * Creates WebAudioPlayer object.
-   *
-   * @return {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.create = function () {
-    Audio.create();
+    /**
+     * The Audio object.
+     *
+     * @type {Audio}
+     */
+    var audio = new Audio();
 
-    var eq = this.readStorage('eq');
-    var vol = this.readStorage('vol');
+    /**
+     * Returns the Audio object.
+     *
+     * @return {Audio}
+     *   The Audio object.
+     */
+    this.getAudio = function () {
+      return audio;
+    };
+
+    /**
+     * Runs code while audio is processing.
+     *
+     * @fires audioprocess
+     */
+    audio.ScriptProcessor.onaudioprocess = function () {
+
+      /**
+       * Indicates that audio is processing.
+       *
+       * This event is fired constantly during the life of an Audio object and
+       * should not be generally listened for. Track objects use this event to
+       * fire their own 'playing' event to indicate when the corresponding track
+       * is actually playing.
+       *
+       * @event audioprocess
+       */
+      Utility.dispatchEvent('audioprocess');
+    };
+
+    var eq = Utility.readStorage('eq');
+    var vol = Utility.readStorage('vol');
 
     if (eq) {
       this.setEq(eq);
@@ -599,18 +629,6 @@
     if (vol) {
       this.setVolume(vol);
     }
-
-    return this;
-  };
-
-  /**
-   * Returns the Audio object.
-   *
-   * @return {Audio}
-   *   The Audio object.
-   */
-  WebAudioPlayer.getAudio = function () {
-    return Audio;
   };
 
   /**
@@ -634,20 +652,21 @@
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
-  WebAudioPlayer.loadUrl = function (urls) {
+  WebAudioPlayer.prototype.loadUrl = function (urls) {
+    var player = this;
     var promise = Utility.getUrlPromise(urls);
 
     if (!promise) {
       promise = urls.reduce(function (sequence, url) {
         return sequence.catch(function () {
           return Utility.getArrayBuffer(url).then(function (data) {
-            return Audio.OfflineContext.decodeAudioData(data);
+            return player.getAudio().OfflineContext.decodeAudioData(data);
           });
         });
       }, Promise.reject())
         .then(function (data) {
           Utility.removeUrlPromise(urls);
-          return new Track(data);
+          return new Track(data, player);
         })
         .catch(function () {
           throw new Error('No valid audio URLs provided.');
@@ -668,10 +687,12 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.setVolume = function (gain) {
-    Audio.Gain.gain.value = gain;
+  WebAudioPlayer.prototype.setVolume = function (gain) {
+    this.getAudio().Gain.gain.value = gain;
 
-    return this.updateStorage('vol', gain);
+    Utility.updateStorage('vol', gain);
+
+    return this;
   };
 
   /**
@@ -680,8 +701,8 @@
    * @return {number}
    *   Previously set value.
    */
-  WebAudioPlayer.getVolume = function () {
-    return Audio.Gain.gain.value;
+  WebAudioPlayer.prototype.getVolume = function () {
+    return this.getAudio().Gain.gain.value;
   };
 
   /**
@@ -696,14 +717,16 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.setEq = function (bands) {
+  WebAudioPlayer.prototype.setEq = function (bands) {
     for (var i in bands) {
-      if (bands.hasOwnProperty(i) && Audio.filters[i]) {
-        Audio.filters[i].gain.value = bands[i];
+      if (bands.hasOwnProperty(i) && this.getAudio().filters[i]) {
+        this.getAudio().filters[i].gain.value = bands[i];
       }
     }
 
-    return this.updateStorage('eq', this.getEq());
+    Utility.updateStorage('eq', this.getEq());
+
+    return this;
   };
 
   /**
@@ -712,49 +735,14 @@
    * @return {number[]}
    *   Array of 10 numbers.
    */
-  WebAudioPlayer.getEq = function () {
+  WebAudioPlayer.prototype.getEq = function () {
     var bands = [];
 
-    Audio.filters.forEach(function (filter) {
+    this.getAudio().filters.forEach(function (filter) {
       bands.push(filter.gain.value);
     });
 
     return bands;
-  };
-
-  /**
-   * Updates data in the storage.
-   *
-   * @param {string} key
-   *   Variable key.
-   * @param {*} value
-   *   Variable value.
-   *
-   * @return {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.updateStorage = function (key, value) {
-    if (typeof localStorage != 'undefined') {
-      localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
-    }
-
-    return this;
-  };
-
-  /**
-   * Reads data from the storage.
-   *
-   * @param {string} key
-   *   Variable key.
-   *
-   * @return {*|null|undefined}
-   *   Variable value if it exists in the storage, null if it doesn't, or
-   *   undefined in case of undefined local storage.
-   */
-  WebAudioPlayer.readStorage = function (key) {
-    if (typeof localStorage != 'undefined') {
-      return JSON.parse(localStorage.getItem('WebAudioPlayer.' + key));
-    }
   };
 
   /**
@@ -768,7 +756,7 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.addEventListener = function (type, callback) {
+  WebAudioPlayer.prototype.addEventListener = function (type, callback) {
     Utility.addEventListener(type, callback);
 
     return this;
@@ -785,12 +773,12 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.removeEventListener = function (type, callback) {
+  WebAudioPlayer.prototype.removeEventListener = function (type, callback) {
     Utility.removeEventListener(type, callback);
 
     return this;
   };
 
-  window.WebAudioPlayer = WebAudioPlayer.create();
+  window.WebAudioPlayer = new WebAudioPlayer();
 
 })();
