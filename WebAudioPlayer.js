@@ -15,15 +15,6 @@
   var Utility = {};
 
   /**
-   * Contains event listeners.
-   *
-   * Object keys are event types, and values are arrays of callbacks.
-   *
-   * @type {object}
-   */
-  Utility.eventListeners = {};
-
-  /**
    * Contains promises about loading URLs.
    *
    * Object keys are URLs, and values are Promise objects.
@@ -31,51 +22,6 @@
    * @type {object}
    */
   Utility.urlPromises = {};
-
-  /**
-   * Registers an event handler of a specific type.
-   *
-   * @param {string} type
-   *   Event type to listen for.
-   * @param {function} callback
-   *   Event handler to call.
-   */
-  Utility.addEventListener = function (type, callback) {
-    if (!(type in this.eventListeners)) {
-      this.eventListeners[type] = [];
-    }
-
-    var stack = this.eventListeners[type];
-    var exists = false;
-
-    for (var i = 0, l = stack.length; i < l; i++) {
-      if (stack[i] === callback) {
-        exists = true;
-        break;
-      }
-    }
-
-    if (!exists) {
-      this.eventListeners[type].push(callback);
-    }
-  };
-
-  /**
-   * Dispatches an event.
-   *
-   * @param {string} type
-   *   Event type to dispatch.
-   */
-  Utility.dispatchEvent = function (type) {
-    if (type in this.eventListeners) {
-      var stack = this.eventListeners[type];
-      var args = Array.prototype.slice.call(arguments, 1);
-
-      for (var i = 0, l = stack.length; i < l; i++) {
-        stack[i].apply(null, args);
-      }
-    }
-  };
 
   /**
    * Makes an XMLHttpRequest to url to get an array buffer.
@@ -135,27 +81,6 @@
   };
 
   /**
-   * Removes an event listener.
-   *
-   * @param {string} type
-   *   Event type to remove.
-   * @param {function} callback
-   *   Event handler to remove.
-   */
-  Utility.removeEventListener = function (type, callback) {
-    if (type in this.eventListeners) {
-      var stack = this.eventListeners[type];
-
-      for (var i = 0, l = stack.length; i < l; i++) {
-        if (stack[i] === callback) {
-          stack.splice(i, 1);
-          break;
-        }
-      }
-    }
-  };
-
-  /**
    * Removes promises about loading URLs.
    *
    * @param {string[]} urls
@@ -208,6 +133,90 @@
   Utility.updateStorage = function (key, value) {
     if (typeof localStorage != 'undefined') {
       localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
+    }
+  };
+
+  /**
+   * Constructs an EventTarget object.
+   *
+   * @constructor
+   */
+  var EventTarget = function () {
+    this.eventListeners = {};
+  };
+
+  /**
+   * Contains event listeners.
+   *
+   * Object keys are event types, and values are arrays of callbacks.
+   *
+   * @type {object}
+   */
+  EventTarget.prototype.eventListeners = null;
+
+  /**
+   * Registers an event handler of a specific type.
+   *
+   * @param {string} type
+   *   Event type to listen for.
+   * @param {function} callback
+   *   Event handler to call.
+   */
+  EventTarget.prototype.addEventListener = function (type, callback) {
+    if (!(type in this.eventListeners)) {
+      this.eventListeners[type] = [];
+    }
+
+    var stack = this.eventListeners[type];
+    var exists = false;
+
+    for (var i = 0, l = stack.length; i < l; i++) {
+      if (stack[i] === callback) {
+        exists = true;
+        break;
+      }
+    }
+
+    if (!exists) {
+      this.eventListeners[type].push(callback);
+    }
+  };
+
+  /**
+   * Removes an event listener.
+   *
+   * @param {string} type
+   *   Event type.
+   * @param {function} callback
+   *   Event handler to remove.
+   */
+  EventTarget.prototype.removeEventListener = function (type, callback) {
+    if (type in this.eventListeners) {
+      var stack = this.eventListeners[type];
+
+      for (var i = 0, l = stack.length; i < l; i++) {
+        if (stack[i] === callback) {
+          stack.splice(i, 1);
+          break;
+        }
+      }
+    }
+  };
+
+  /**
+   * Dispatches an event.
+   *
+   * @param {string} type
+   *   Event type to dispatch.
+   */
+  EventTarget.prototype.dispatchEvent = function (type) {
+    if (type in this.eventListeners) {
+      var stack = this.eventListeners[type];
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      for (var i = 0, l = stack.length; i < l; i++) {
+        stack[i].apply(this, args);
+      }
     }
   };
 
@@ -309,6 +318,7 @@
    *   The WebAudioPlayer object.
    */
   var Track = function (buffer, player) {
+    EventTarget.call(this);
 
     /**
      * Indicates whether an audio is currently playing.
@@ -390,12 +400,9 @@
         /**
          * Indicates that the track is playing.
          *
-         * @param {Track} track
-         *   The Track object.
-         *
          * @event playing
          */
-        Utility.dispatchEvent('playing', track);
+        track.dispatchEvent('playing');
       }
     };
 
@@ -411,7 +418,7 @@
         offset = Math.max(offset, 0);
         var duration = Math.max(buffer.duration - offset, 0);
 
-        Utility.addEventListener('audioprocess', audioprocess);
+        player.addEventListener('audioprocess', audioprocess);
 
         source = player.getAudio().Context.createBufferSource();
         source.connect(player.getAudio().Analyser);
@@ -435,13 +442,10 @@
             /**
              * Indicates that the track has finished playing.
              *
-             * @param {Track} track
-             *   The Track object.
-             *
              * @event finished
              */
-            Utility.dispatchEvent('finished', track);
-            Utility.removeEventListener('audioprocess', audioprocess);
+            track.dispatchEvent('finished');
+            player.removeEventListener('audioprocess', audioprocess);
           }
         };
 
@@ -470,7 +474,7 @@
       }
 
       skipped = offset = 0;
-      Utility.removeEventListener('audioprocess', audioprocess);
+      player.removeEventListener('audioprocess', audioprocess);
 
       return this;
     };
@@ -493,7 +497,7 @@
         offset += player.getAudio().Context.currentTime - playStartedAt;
       }
 
-      Utility.removeEventListener('audioprocess', audioprocess);
+      player.removeEventListener('audioprocess', audioprocess);
 
       return this;
     };
@@ -576,12 +580,15 @@
 
   };
 
+  Track.prototype = EventTarget.prototype;
+
   /**
    * Constructs a WebAudioPlayer object.
    *
    * @constructor
    */
   var WebAudioPlayer = function () {
+    EventTarget.call(this);
 
     /**
      * The Audio object.
@@ -589,6 +596,13 @@
      * @type {Audio}
      */
     var audio = new Audio();
+
+    /**
+     * Contains this WebAudioPlayer object.
+     *
+     * @type {WebAudioPlayer}
+     */
+    var player = this;
 
     /**
      * Returns the Audio object.
@@ -617,7 +631,7 @@
        *
        * @event audioprocess
        */
-      Utility.dispatchEvent('audioprocess');
+      player.dispatchEvent('audioprocess');
     };
 
     var eq = Utility.readStorage('eq');
@@ -630,6 +644,8 @@
       this.setVolume(vol);
     }
   };
+
+  WebAudioPlayer.prototype = EventTarget.prototype;
 
   /**
    * Loads the audio file by URL into buffer.
@@ -743,40 +759,6 @@
     });
 
     return bands;
-  };
-
-  /**
-   * Registers an event handler of a specific type.
-   *
-   * @param {string} type
-   *   Event type to listen for.
-   * @param {function} callback
-   *   Event handler to call.
-   *
-   * @return {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.prototype.addEventListener = function (type, callback) {
-    Utility.addEventListener(type, callback);
-
-    return this;
-  };
-
-  /**
-   * Removes an event listener.
-   *
-   * @param {string} type
-   *   Event type to remove.
-   * @param {function} callback
-   *   Event handler to remove.
-   *
-   * @return {WebAudioPlayer}
-   *   The WebAudioPlayer object.
-   */
-  WebAudioPlayer.prototype.removeEventListener = function (type, callback) {
-    Utility.removeEventListener(type, callback);
-
-    return this;
   };
 
   window.WebAudioPlayer = new WebAudioPlayer();
