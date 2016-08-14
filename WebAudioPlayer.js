@@ -328,6 +328,28 @@
     var isPlaying = false;
 
     /**
+     * Contains all markers registered with a when() method for current track.
+     *
+     * An array of plain objects. Each object has the following elements:
+     * - m: A time marker in seconds.
+     * - fn: A callback to execute on a marker.
+     *
+     * @type {object[]}
+     *
+     * @see when
+     */
+    var markers = [];
+
+    /**
+     * Contains markers and corresponding callbacks to fire during playback.
+     *
+     * @type {object[]}
+     *
+     * @see markers
+     */
+    var markersToFire = [];
+
+    /**
      * Indicates the offset with which the most recent playback was started.
      *
      * This variable contains a number of seconds from the start of an audio
@@ -386,6 +408,31 @@
     var track = this;
 
     /**
+     * Fires marker callbacks if corresponding marker is reached.
+     *
+     * @param {boolean} justOne
+     *   (optional) Set to true to return after the first fired callback.
+     */
+    var fireMarkers = function (justOne) {
+      for (var i in markersToFire) {
+        if (markersToFire[i].m <= playedTime) {
+          setTimeout(markersToFire[i].fn.bind(track), 0);
+
+          if (justOne) {
+            // Remove the marker from array.
+            markersToFire.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      if (!justOne) {
+        // Set all markers back to array.
+        markersToFire = markers.slice(0);
+      }
+    };
+
+    /**
      * Makes the routine work while track is playing.
      *
      * @fires playing
@@ -396,6 +443,8 @@
         // it remains with the same value, not minding of actual value of
         // the 'skipped' var.
         playedTime = track.getCurrentTime() - skipped;
+
+        fireMarkers(true);
 
         /**
          * Indicates that the track is playing.
@@ -413,7 +462,7 @@
      *   The Track object.
      */
     this.play = function () {
-      if (!isPlaying) {
+      if (!isPlaying && offset < buffer.duration) {
         isPlaying = true;
         offset = Math.max(offset, 0);
         var duration = Math.max(buffer.duration - offset, 0);
@@ -446,6 +495,10 @@
              */
             track.dispatchEvent('finished');
             player.removeEventListener('audioprocess', audioprocess);
+
+            // Fire final marker callbacks if they are did not make it during
+            // playback.
+            fireMarkers();
           }
         };
 
@@ -475,6 +528,7 @@
 
       skipped = offset = 0;
       player.removeEventListener('audioprocess', audioprocess);
+      fireMarkers();
 
       return this;
     };
@@ -534,6 +588,37 @@
       else {
         offset = newOffset;
       }
+
+      return this;
+    };
+
+    /**
+     * Sets the callback to execute on a time marker.
+     *
+     * This method uses the actual played time. It means that markers cannot be
+     * accidentally skipped if a listener skips track parts.
+     *
+     * @param {number} marker
+     *   A time marker in seconds of actual playback.
+     * @param {function} callback
+     *   A callback to execute when marker is reached.
+     *
+     * @return {Track}
+     *   The Track object.
+     *
+     * @throws {TypeError}
+     *   If marker is negative.
+     *
+     * @see getPlayedTime
+     */
+    this.when = function (marker, callback) {
+      if (marker < 0) {
+        throw new TypeError('Marker parameter accepts non-negative numbers only.');
+      }
+
+      var item = {m: marker, fn: callback};
+      markersToFire.push(item);
+      markers.push(item);
 
       return this;
     };
