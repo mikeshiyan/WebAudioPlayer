@@ -409,26 +409,16 @@
 
     /**
      * Fires marker callbacks if corresponding marker is reached.
-     *
-     * @param {boolean} justOne
-     *   (optional) Set to true to return after the first fired callback.
      */
-    var fireMarkers = function (justOne) {
+    var fireMarkers = function () {
       for (var i in markersToFire) {
         if (markersToFire[i].m <= playedTime) {
           setTimeout(markersToFire[i].fn.bind(track), 0);
 
-          if (justOne) {
-            // Remove the marker from array.
-            markersToFire.splice(i, 1);
-            break;
-          }
+          // One thing at a time. Remove the marker and break the loop.
+          markersToFire.splice(i, 1);
+          break;
         }
-      }
-
-      if (!justOne) {
-        // Set all markers back to array.
-        markersToFire = markers.slice(0);
       }
     };
 
@@ -444,7 +434,7 @@
         // the 'skipped' var.
         playedTime = track.getCurrentTime() - skipped;
 
-        fireMarkers(true);
+        fireMarkers();
 
         /**
          * Indicates that the track is playing.
@@ -496,9 +486,8 @@
             track.dispatchEvent('finished');
             player.removeEventListener('audioprocess', audioprocess);
 
-            // Fire final marker callbacks if they are did not make it during
-            // playback.
-            fireMarkers();
+            // Set all markers back to array.
+            markersToFire = markers.slice(0);
           }
         };
 
@@ -528,7 +517,7 @@
 
       skipped = offset = 0;
       player.removeEventListener('audioprocess', audioprocess);
-      fireMarkers();
+      markersToFire = markers.slice(0);
 
       return this;
     };
