@@ -226,7 +226,7 @@
    * @constructor
    */
   var Audio = function () {
-    this.Context = new (window.AudioContext || window.webkitAudioContext);
+    this.Context = new (window.AudioContext || window.webkitAudioContext)();
     this.OfflineContext = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, this.Context.sampleRate);
 
     this.Analyser = this.Context.createAnalyser();
