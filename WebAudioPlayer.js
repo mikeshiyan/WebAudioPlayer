@@ -654,7 +654,8 @@
 
   };
 
-  Track.prototype = EventTarget.prototype;
+  Track.prototype = Object.create(EventTarget.prototype);
+  Track.prototype.constructor = Track;
 
   /**
    * Constructs a WebAudioPlayer object.
@@ -719,7 +720,8 @@
     }
   };
 
-  WebAudioPlayer.prototype = EventTarget.prototype;
+  WebAudioPlayer.prototype = Object.create(EventTarget.prototype);
+  WebAudioPlayer.prototype.constructor = WebAudioPlayer;
 
   /**
    * Loads the audio file by URL into buffer.
