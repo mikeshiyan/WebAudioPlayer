@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/mikeshiyan/WebAudioPlayer/issues"
   },
-  "homepage": "https://github.com/mikeshiyan/WebAudioPlayer"
+  "homepage": "https://github.com/mikeshiyan/WebAudioPlayer",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
 }
