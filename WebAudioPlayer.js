@@ -837,6 +837,6 @@
     return bands;
   };
 
-  window.WebAudioPlayer = new WebAudioPlayer();
+  window.WebAudioPlayer = WebAudioPlayer;
 
 })();
