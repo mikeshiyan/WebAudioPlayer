@@ -1,0 +1,24 @@
+{
+  "name": "web_audio_player",
+  "version": "2.0.0-alpha.1",
+  "description": "JS audio player using Web Audio API.",
+  "main": "src/WebAudioPlayer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikeshiyan/WebAudioPlayer.git"
+  },
+  "keywords": [
+    "web",
+    "audio",
+    "player"
+  ],
+  "author": "Mike Shiyan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mikeshiyan/WebAudioPlayer/issues"
+  },
+  "homepage": "https://github.com/mikeshiyan/WebAudioPlayer"
+}
