@@ -1,0 +1,9 @@
+{
+  "globals": {
+    "Utility": false,
+    "EventTarget": false,
+    "Audio": false,
+    "Track": false,
+    "WebAudioPlayer": false
+  }
+}
