@@ -8,6 +8,7 @@
 (function () {
 
 /* include "classes.js" */
+
 window.WebAudioPlayer = WebAudioPlayer;
 
 })();

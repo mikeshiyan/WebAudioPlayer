@@ -1,9 +1,15 @@
 {
+  "env": {
+    "node": false
+  },
   "globals": {
     "Utility": false,
     "EventTarget": false,
     "Audio": false,
     "Track": false,
     "WebAudioPlayer": false
+  },
+  "rules": {
+    "no-unused-vars": [2, {"vars": "local", "args": "none"}]
   }
 }

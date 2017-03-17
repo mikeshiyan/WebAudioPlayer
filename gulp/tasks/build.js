@@ -2,6 +2,7 @@
 
 var gulp = require('gulp');
 var concat = require('gulp-concat');
+var babel = require('gulp-babel');
 var tributary = require('gulp-tributary');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
@@ -17,7 +18,8 @@ gulp.task('build', function (cb) {
     'src/track.js',
     'src/web_audio_player.js'
   ])
-    .pipe(concat('classes.js', {newLine: '\n'}));
+    .pipe(concat('classes.js', {newLine: '\n'}))
+    .pipe(babel({presets: ['es2015']}));
 
   pump([
     gulp.src('templates/WebAudioPlayer.js'),

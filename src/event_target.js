@@ -1,85 +1,93 @@
 'use strict';
 
 /**
- * Constructs an EventTarget object.
+ * Provides methods to work with events.
  *
- * @constructor
+ * @namespace
  */
-var EventTarget = function () {
-  this.eventListeners = {};
-};
+class EventTarget {
 
-/**
- * Contains event listeners.
- *
- * Object keys are event types, and values are arrays of callbacks.
- *
- * @type {object}
- */
-EventTarget.prototype.eventListeners = null;
+  /**
+   * Constructs an EventTarget object.
+   *
+   * @constructor
+   */
+  constructor() {
 
-/**
- * Registers an event handler of a specific type.
- *
- * @param {string} type
- *   Event type to listen for.
- * @param {function} callback
- *   Event handler to call.
- */
-EventTarget.prototype.addEventListener = function (type, callback) {
-  if (!(type in this.eventListeners)) {
-    this.eventListeners[type] = [];
+    /**
+     * Contains event listeners.
+     *
+     * Object keys are event types, and values are arrays of callbacks.
+     *
+     * @type {object}
+     */
+    this.eventListeners = {};
   }
 
-  var stack = this.eventListeners[type];
-  var exists = false;
-
-  for (var i = 0, l = stack.length; i < l; i++) {
-    if (stack[i] === callback) {
-      exists = true;
-      break;
+  /**
+   * Registers an event handler of a specific type.
+   *
+   * @param {string} type
+   *   Event type to listen for.
+   * @param {function} callback
+   *   Event handler to call.
+   */
+  addEventListener(type, callback) {
+    if (!(type in this.eventListeners)) {
+      this.eventListeners[type] = [];
     }
-  }
 
-  if (!exists) {
-    this.eventListeners[type].push(callback);
-  }
-};
+    const stack = this.eventListeners[type];
+    let exists = false;
 
-/**
- * Removes an event listener.
- *
- * @param {string} type
- *   Event type.
- * @param {function} callback
- *   Event handler to remove.
- */
-EventTarget.prototype.removeEventListener = function (type, callback) {
-  if (type in this.eventListeners) {
-    var stack = this.eventListeners[type];
-
-    for (var i = 0, l = stack.length; i < l; i++) {
+    for (let i = 0, l = stack.length; i < l; i++) {
       if (stack[i] === callback) {
-        stack.splice(i, 1);
+        exists = true;
         break;
       }
     }
-  }
-};
 
-/**
- * Dispatches an event.
- *
- * @param {string} type
- *   Event type to dispatch.
- */
-EventTarget.prototype.dispatchEvent = function (type) {
-  if (type in this.eventListeners) {
-    var stack = this.eventListeners[type];
-    var args = Array.prototype.slice.call(arguments, 1);
-
-    for (var i = 0, l = stack.length; i < l; i++) {
-      stack[i].apply(this, args);
+    if (!exists) {
+      this.eventListeners[type].push(callback);
     }
   }
-};
+
+  /**
+   * Removes an event listener.
+   *
+   * @param {string} type
+   *   Event type.
+   * @param {function} callback
+   *   Event handler to remove.
+   */
+  removeEventListener(type, callback) {
+    if (type in this.eventListeners) {
+      let stack = this.eventListeners[type];
+
+      for (let i = 0, l = stack.length; i < l; i++) {
+        if (stack[i] === callback) {
+          stack.splice(i, 1);
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Dispatches an event.
+   *
+   * @param {string} type
+   *   Event type to dispatch.
+   */
+  dispatchEvent(type) {
+    if (type in this.eventListeners) {
+      const stack = this.eventListeners[type];
+      const args = Array.prototype.slice.call(arguments, 1);
+
+      for (let i = 0, l = stack.length; i < l; i++) {
+        stack[i].apply(this, args);
+      }
+    }
+  }
+
+}
