@@ -1,6 +1,7 @@
 'use strict';
 
 var gulp = require('gulp');
+var concat = require('gulp-concat');
 var tributary = require('gulp-tributary');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
@@ -9,12 +10,20 @@ var pump = require('pump');
 
 gulp.task('build', function (cb) {
   var pkg = require('../../package.json');
+  var src = gulp.src([
+    'src/utility.js',
+    'src/event_target.js',
+    'src/audio.js',
+    'src/track.js',
+    'src/web_audio_player.js'
+  ])
+    .pipe(concat('classes.js', {newLine: '\n'}));
 
   pump([
     gulp.src('templates/WebAudioPlayer.js'),
 
     // Create dist.
-    tributary(gulp.src('src/*.js')),
+    tributary(src),
     replace('{{ version }}', pkg.version),
     gulp.dest('dist'),
 

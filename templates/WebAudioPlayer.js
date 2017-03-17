@@ -7,11 +7,7 @@
 
 (function () {
 
-/* include "utility.js" */
-/* include "event_target.js" */
-/* include "audio.js" */
-/* include "track.js" */
-/* include "web_audio_player.js" */
+/* include "classes.js" */
 window.WebAudioPlayer = WebAudioPlayer;
 
 })();
