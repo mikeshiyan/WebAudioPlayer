@@ -7,7 +7,7 @@
 
 (function () {
 
-/* include "classes.js" */
+/* include "sources.js" */
 
 window.WebAudioPlayer = WebAudioPlayer;
 

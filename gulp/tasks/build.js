@@ -7,10 +7,11 @@ var tributary = require('gulp-tributary');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
-var pump = require('pump');
 
-gulp.task('build', function (cb) {
+gulp.task('build', function () {
   var pkg = require('../../package.json');
+
+  // Compile sources.
   var src = gulp.src([
     'src/utility.js',
     'src/event_target.js',
@@ -18,20 +19,16 @@ gulp.task('build', function (cb) {
     'src/track.js',
     'src/web_audio_player.js'
   ])
-    .pipe(concat('classes.js', {newLine: '\n'}))
+    .pipe(concat('sources.js', {newLine: '\n'}))
     .pipe(babel({presets: ['es2015']}));
 
-  pump([
-    gulp.src('templates/WebAudioPlayer.js'),
-
+  gulp.src('templates/WebAudioPlayer.js')
     // Create dist.
-    tributary(src),
-    replace('{{ version }}', pkg.version),
-    gulp.dest('dist'),
-
+    .pipe(tributary(src))
+    .pipe(replace('{{ version }}', pkg.version))
+    .pipe(gulp.dest('dist'))
     // Create minified version.
-    uglify(),
-    rename('WebAudioPlayer.min.js'),
-    gulp.dest('dist')
-  ], cb);
+    .pipe(uglify())
+    .pipe(rename('WebAudioPlayer.min.js'))
+    .pipe(gulp.dest('dist'));
 });
