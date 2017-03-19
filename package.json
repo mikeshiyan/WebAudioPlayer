@@ -1,25 +1,27 @@
 {
   "name": "web_audio_player",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "description": "Audio player using Web Audio API.",
+  "files": [
+    "dist"
+  ],
   "main": "dist/web_audio_player.common.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mikeshiyan/WebAudioPlayer.git"
+    "url": "https://github.com/mikeshiyan/WebAudioPlayer.git"
   },
   "keywords": [
-    "web",
     "audio",
-    "player"
+    "browser",
+    "player",
+    "web"
   ],
   "author": "Mike Shiyan",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/mikeshiyan/WebAudioPlayer/issues"
-  },
+  "bugs": "https://github.com/mikeshiyan/WebAudioPlayer/issues",
   "homepage": "https://github.com/mikeshiyan/WebAudioPlayer",
   "devDependencies": {
     "babel-preset-es2015": "^6.24.0",
