@@ -27,6 +27,7 @@ gulp.task('build', function () {
 
   templates.forEach(function (tplName) {
     var tplSrc = gulp.src('templates/' + tplName + '.js')
+      .pipe(replace('{{ description }}', pkg.description))
       .pipe(replace('{{ version }}', pkg.version));
 
     // Create ES6 dist.

@@ -1,7 +1,7 @@
 {
   "name": "web_audio_player",
-  "version": "2.0.0-alpha.2",
-  "description": "JS audio player using Web Audio API.",
+  "version": "2.0.0-alpha.3",
+  "description": "Audio player using Web Audio API.",
   "main": "dist/web_audio_player.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

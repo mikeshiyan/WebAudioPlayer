@@ -1,6 +1,6 @@
 /**
  * @file
- * Audio player using Web Audio API.
+ * {{ description }}
  *
  * @version {{ version }}
  */
