@@ -1,6 +1,7 @@
 'use strict';
 
 var gulp = require('gulp');
+var del = require('del');
 var concat = require('gulp-concat');
 var clone = require('gulp-clone');
 var babel = require('gulp-babel');
@@ -10,6 +11,8 @@ var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 
 gulp.task('build', function () {
+  del(['dist']);
+
   var pkg = require('../../package.json');
   var templates = [pkg.name, 'common'];
 
