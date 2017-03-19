@@ -11,7 +11,7 @@ var rename = require('gulp-rename');
 
 gulp.task('build', function () {
   var pkg = require('../../package.json');
-  var templates = ['WebAudioPlayer'];
+  var templates = ['web_audio_player'];
 
   // Compile sources.
   var es6src = gulp.src([
