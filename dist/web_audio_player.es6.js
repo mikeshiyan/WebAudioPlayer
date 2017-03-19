@@ -1,27 +1,20 @@
 /**
  * @file
  * Audio player using Web Audio API.
+ *
+ * @version 2.0.0-beta.1
  */
 
 (function () {
 
-  'use strict';
+'use strict';
 
-  /**
-   * Contains various utility methods.
-   *
-   * @namespace
-   */
-  var Utility = {};
-
-  /**
-   * Contains promises about loading URLs.
-   *
-   * Object keys are URLs, and values are Promise objects.
-   *
-   * @type {object}
-   */
-  Utility.urlPromises = {};
+/**
+ * Contains various utility methods.
+ *
+ * @namespace
+ */
+class Utility {
 
   /**
    * Makes an XMLHttpRequest to url to get an array buffer.
@@ -36,9 +29,9 @@
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
-  Utility.getArrayBuffer = function (url) {
+  static getArrayBuffer(url) {
     return new Promise(function (ok, fail) {
-      var xhr = new XMLHttpRequest();
+      let xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'arraybuffer';
 
@@ -57,7 +50,7 @@
 
       xhr.send();
     });
-  };
+  }
 
   /**
    * Gets a promise about loading URLs.
@@ -72,13 +65,13 @@
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
-  Utility.getUrlPromise = function (urls) {
-    for (var i in urls) {
+  static getUrlPromise(urls) {
+    for (let i in urls) {
       if (urls.hasOwnProperty(i) && Utility.urlPromises[urls[i]]) {
         return Utility.urlPromises[urls[i]];
       }
     }
-  };
+  }
 
   /**
    * Removes promises about loading URLs.
@@ -86,11 +79,11 @@
    * @param {string[]} urls
    *   An array of mirror URLs.
    */
-  Utility.removeUrlPromise = function (urls) {
+  static removeUrlPromise(urls) {
     urls.forEach(function (url) {
       delete Utility.urlPromises[url];
     });
-  };
+  }
 
   /**
    * Saves the promise about loading URLs in temporary static cache.
@@ -100,11 +93,11 @@
    * @param {Promise} promise
    *   The Promise object.
    */
-  Utility.setUrlPromise = function (urls, promise) {
+  static setUrlPromise(urls, promise) {
     urls.forEach(function (url) {
       Utility.urlPromises[url] = promise;
     });
-  };
+  }
 
   /**
    * Reads data from the storage.
@@ -116,11 +109,11 @@
    *   Variable value if it exists in the storage, null if it doesn't, or
    *   undefined in case of undefined local storage.
    */
-  Utility.readStorage = function (key) {
+  static readStorage(key) {
     if (typeof localStorage != 'undefined') {
       return JSON.parse(localStorage.getItem('WebAudioPlayer.' + key));
     }
-  };
+  }
 
   /**
    * Updates data in the storage.
@@ -130,29 +123,48 @@
    * @param {*} value
    *   Variable value.
    */
-  Utility.updateStorage = function (key, value) {
+  static updateStorage(key, value) {
     if (typeof localStorage != 'undefined') {
       localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
     }
-  };
+  }
+
+}
+
+/**
+ * Contains promises about loading URLs.
+ *
+ * Object keys are URLs, and values are Promise objects.
+ *
+ * @type {object}
+ */
+Utility.urlPromises = {};
+
+'use strict';
+
+/**
+ * Provides methods to work with events.
+ *
+ * @namespace
+ */
+class EventTarget {
 
   /**
    * Constructs an EventTarget object.
    *
    * @constructor
    */
-  var EventTarget = function () {
-    this.eventListeners = {};
-  };
+  constructor() {
 
-  /**
-   * Contains event listeners.
-   *
-   * Object keys are event types, and values are arrays of callbacks.
-   *
-   * @type {object}
-   */
-  EventTarget.prototype.eventListeners = null;
+    /**
+     * Contains event listeners.
+     *
+     * Object keys are event types, and values are arrays of callbacks.
+     *
+     * @type {object}
+     */
+    this.eventListeners = {};
+  }
 
   /**
    * Registers an event handler of a specific type.
@@ -162,15 +174,15 @@
    * @param {function} callback
    *   Event handler to call.
    */
-  EventTarget.prototype.addEventListener = function (type, callback) {
+  addEventListener(type, callback) {
     if (!(type in this.eventListeners)) {
       this.eventListeners[type] = [];
     }
 
-    var stack = this.eventListeners[type];
-    var exists = false;
+    const stack = this.eventListeners[type];
+    let exists = false;
 
-    for (var i = 0, l = stack.length; i < l; i++) {
+    for (let i = 0, l = stack.length; i < l; i++) {
       if (stack[i] === callback) {
         exists = true;
         break;
@@ -180,7 +192,7 @@
     if (!exists) {
       this.eventListeners[type].push(callback);
     }
-  };
+  }
 
   /**
    * Removes an event listener.
@@ -190,18 +202,18 @@
    * @param {function} callback
    *   Event handler to remove.
    */
-  EventTarget.prototype.removeEventListener = function (type, callback) {
+  removeEventListener(type, callback) {
     if (type in this.eventListeners) {
-      var stack = this.eventListeners[type];
+      let stack = this.eventListeners[type];
 
-      for (var i = 0, l = stack.length; i < l; i++) {
+      for (let i = 0, l = stack.length; i < l; i++) {
         if (stack[i] === callback) {
           stack.splice(i, 1);
           break;
         }
       }
     }
-  };
+  }
 
   /**
    * Dispatches an event.
@@ -209,34 +221,80 @@
    * @param {string} type
    *   Event type to dispatch.
    */
-  EventTarget.prototype.dispatchEvent = function (type) {
+  dispatchEvent(type) {
     if (type in this.eventListeners) {
-      var stack = this.eventListeners[type];
-      var args = Array.prototype.slice.call(arguments, 1);
+      const stack = this.eventListeners[type];
+      const args = Array.prototype.slice.call(arguments, 1);
 
-      for (var i = 0, l = stack.length; i < l; i++) {
+      for (let i = 0, l = stack.length; i < l; i++) {
         stack[i].apply(this, args);
       }
     }
-  };
+  }
+
+}
+
+'use strict';
+
+/**
+ * Links to the internal AudioContext and related objects.
+ *
+ * @namespace
+ */
+class Audio {
 
   /**
    * Constructs an Audio object.
    *
    * @constructor
    */
-  var Audio = function () {
+  constructor() {
+
+    /**
+     * The AudioContext object.
+     *
+     * @type {AudioContext}
+     */
     this.Context = new (window.AudioContext || window.webkitAudioContext)();
+
+    /**
+     * The OfflineAudioContext object.
+     *
+     * @type {OfflineAudioContext}
+     */
     this.OfflineContext = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 2, this.Context.sampleRate);
 
+    /**
+     * The AnalyserNode object.
+     *
+     * @type {AnalyserNode}
+     */
     this.Analyser = this.Context.createAnalyser();
+
+    /**
+     * The GainNode object.
+     *
+     * @type {GainNode}
+     */
     this.Gain = this.Context.createGain();
+
+    /**
+     * The ScriptProcessorNode object.
+     *
+     * @type {ScriptProcessorNode}
+     */
     this.ScriptProcessor = this.Context.createScriptProcessor();
 
+    /**
+     * Array of BiquadFilterNode objects.
+     *
+     * @type {BiquadFilterNode[]}
+     */
     this.filters = [];
-    var frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
 
-    for (var i = 0; i < 10; i++) {
+    const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
+
+    for (let i = 0; i < 10; i++) {
       this.filters[i] = this.Context.createBiquadFilter();
       this.filters[i].frequency.value = frequencies[i];
 
@@ -263,49 +321,18 @@
 
     this.ScriptProcessor
       .connect(this.Context.destination);
-  };
+  }
 
-  /**
-   * The AnalyserNode object.
-   *
-   * @type {AnalyserNode}
-   */
-  Audio.prototype.Analyser = null;
+}
 
-  /**
-   * The AudioContext object.
-   *
-   * @type {AudioContext}
-   */
-  Audio.prototype.Context = null;
+'use strict';
 
-  /**
-   * The GainNode object.
-   *
-   * @type {GainNode}
-   */
-  Audio.prototype.Gain = null;
-
-  /**
-   * The OfflineAudioContext object.
-   *
-   * @type {OfflineAudioContext}
-   */
-  Audio.prototype.OfflineContext = null;
-
-  /**
-   * The ScriptProcessorNode object.
-   *
-   * @type {ScriptProcessorNode}
-   */
-  Audio.prototype.ScriptProcessor = null;
-
-  /**
-   * Array of BiquadFilterNode objects.
-   *
-   * @type {BiquadFilterNode[]}
-   */
-  Audio.prototype.filters = [];
+/**
+ * Provides audiotrack-specific methods.
+ *
+ * @namespace
+ */
+class Track extends EventTarget {
 
   /**
    * Constructs a Track object.
@@ -317,15 +344,15 @@
    * @param {WebAudioPlayer} player
    *   The WebAudioPlayer object.
    */
-  var Track = function (buffer, player) {
-    EventTarget.call(this);
+  constructor(buffer, player) {
+    super();
 
     /**
      * Indicates whether an audio is currently playing.
      *
      * @type {boolean}
      */
-    var isPlaying = false;
+    let isPlaying = false;
 
     /**
      * Contains all markers registered with a when() method for current track.
@@ -338,7 +365,7 @@
      *
      * @see when
      */
-    var markers = [];
+    let markers = [];
 
     /**
      * Contains markers and corresponding callbacks to fire during playback.
@@ -347,7 +374,7 @@
      *
      * @see markers
      */
-    var markersToFire = [];
+    let markersToFire = [];
 
     /**
      * Indicates the offset with which the most recent playback was started.
@@ -360,7 +387,7 @@
      *
      * @type {number}
      */
-    var offset = 0;
+    let offset = 0;
 
     /**
      * Indicates the time the track was actually played.
@@ -372,7 +399,7 @@
      *
      * @type {number}
      */
-    var playedTime = 0;
+    let playedTime = 0;
 
     /**
      * Indicates the most recent moment when the playback was started.
@@ -381,7 +408,7 @@
      *
      * @type {number}
      */
-    var playStartedAt = 0;
+    let playStartedAt = 0;
 
     /**
      * Contains the total time skipped when changing playback positions.
@@ -391,27 +418,27 @@
      *
      * @type {number}
      */
-    var skipped = 0;
+    let skipped = 0;
 
     /**
      * Contains an AudioBufferSourceNode object.
      *
      * @type {AudioBufferSourceNode}
      */
-    var source = null;
+    let source = null;
 
     /**
      * Contains this Track object.
      *
      * @type {Track}
      */
-    var track = this;
+    let track = this;
 
     /**
      * Fires marker callbacks if corresponding marker is reached.
      */
-    var fireMarkers = function () {
-      for (var i in markersToFire) {
+    const fireMarkers = function () {
+      for (let i in markersToFire) {
         if (markersToFire[i].m <= playedTime) {
           setTimeout(markersToFire[i].fn.bind(track), 0);
 
@@ -427,7 +454,7 @@
      *
      * @fires playing
      */
-    var audioprocess = function () {
+    const audioprocess = function () {
       if (isPlaying) {
         // Played time is only being increased while playing. When not playing
         // it remains with the same value, not minding of actual value of
@@ -455,7 +482,7 @@
       if (!isPlaying && offset < buffer.duration) {
         isPlaying = true;
         offset = Math.max(offset, 0);
-        var duration = Math.max(buffer.duration - offset, 0);
+        let duration = Math.max(buffer.duration - offset, 0);
 
         player.addEventListener('audioprocess', audioprocess);
 
@@ -529,7 +556,7 @@
      *   The Track object.
      */
     this.pause = function () {
-      var wasPlaying = isPlaying;
+      const wasPlaying = isPlaying;
       isPlaying = false;
 
       if (source) {
@@ -605,7 +632,7 @@
         throw new TypeError('Marker parameter accepts non-negative numbers only.');
       }
 
-      var item = {m: marker, fn: callback};
+      const item = {m: marker, fn: callback};
       markersToFire.push(item);
       markers.push(item);
 
@@ -651,33 +678,40 @@
     this.isPlaying = function () {
       return isPlaying;
     };
+  }
 
-  };
+}
 
-  Track.prototype = Object.create(EventTarget.prototype);
-  Track.prototype.constructor = Track;
+'use strict';
+
+/**
+ * The main, public class, providing general methods.
+ *
+ * @namespace
+ */
+class WebAudioPlayer extends EventTarget {
 
   /**
    * Constructs a WebAudioPlayer object.
    *
    * @constructor
    */
-  var WebAudioPlayer = function () {
-    EventTarget.call(this);
+  constructor() {
+    super();
 
     /**
      * The Audio object.
      *
      * @type {Audio}
      */
-    var audio = new Audio();
+    let audio = new Audio();
 
     /**
      * Contains this WebAudioPlayer object.
      *
      * @type {WebAudioPlayer}
      */
-    var player = this;
+    let player = this;
 
     /**
      * Returns the Audio object.
@@ -709,8 +743,8 @@
       player.dispatchEvent('audioprocess');
     };
 
-    var eq = Utility.readStorage('eq');
-    var vol = Utility.readStorage('vol');
+    const eq = Utility.readStorage('eq');
+    const vol = Utility.readStorage('vol');
 
     if (eq) {
       this.setEq(eq);
@@ -718,10 +752,7 @@
     if (vol) {
       this.setVolume(vol);
     }
-  };
-
-  WebAudioPlayer.prototype = Object.create(EventTarget.prototype);
-  WebAudioPlayer.prototype.constructor = WebAudioPlayer;
+  }
 
   /**
    * Loads the audio file by URL into buffer.
@@ -744,9 +775,9 @@
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
-  WebAudioPlayer.prototype.loadUrl = function (urls) {
-    var player = this;
-    var promise = Utility.getUrlPromise(urls);
+  loadUrl(urls) {
+    let player = this;
+    let promise = Utility.getUrlPromise(urls);
 
     if (!promise) {
       promise = urls.reduce(function (sequence, url) {
@@ -768,7 +799,7 @@
     }
 
     return promise;
-  };
+  }
 
   /**
    * Sets the playback volume to new level.
@@ -779,13 +810,13 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.prototype.setVolume = function (gain) {
+  setVolume(gain) {
     this.getAudio().Gain.gain.value = gain;
 
     Utility.updateStorage('vol', gain);
 
     return this;
-  };
+  }
 
   /**
    * Gets the current value of the playback volume level.
@@ -793,9 +824,9 @@
    * @return {number}
    *   Previously set value.
    */
-  WebAudioPlayer.prototype.getVolume = function () {
+  getVolume() {
     return this.getAudio().Gain.gain.value;
-  };
+  }
 
   /**
    * Sets the equalizer bands to new levels.
@@ -809,8 +840,8 @@
    * @return {WebAudioPlayer}
    *   The WebAudioPlayer object.
    */
-  WebAudioPlayer.prototype.setEq = function (bands) {
-    for (var i in bands) {
+  setEq(bands) {
+    for (let i in bands) {
       if (bands.hasOwnProperty(i) && this.getAudio().filters[i]) {
         this.getAudio().filters[i].gain.value = bands[i];
       }
@@ -819,7 +850,7 @@
     Utility.updateStorage('eq', this.getEq());
 
     return this;
-  };
+  }
 
   /**
    * Gets the current band levels of the equalizer.
@@ -827,16 +858,19 @@
    * @return {number[]}
    *   Array of 10 numbers.
    */
-  WebAudioPlayer.prototype.getEq = function () {
-    var bands = [];
+  getEq() {
+    let bands = [];
 
     this.getAudio().filters.forEach(function (filter) {
       bands.push(filter.gain.value);
     });
 
     return bands;
-  };
+  }
 
-  window.WebAudioPlayer = new WebAudioPlayer();
+}
+
+
+window.WebAudioPlayer = WebAudioPlayer;
 
 })();
