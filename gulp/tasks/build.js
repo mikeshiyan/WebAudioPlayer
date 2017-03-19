@@ -11,7 +11,7 @@ var rename = require('gulp-rename');
 
 gulp.task('build', function () {
   var pkg = require('../../package.json');
-  var templates = ['web_audio_player'];
+  var templates = [pkg.name, 'common'];
 
   // Compile sources.
   var es6src = gulp.src([
@@ -31,18 +31,26 @@ gulp.task('build', function () {
       .pipe(replace('{{ version }}', pkg.version));
 
     // Create ES6 dist.
-    tplSrc.pipe(clone())
-      .pipe(tributary(es6src))
-      .pipe(rename(tplName + '.es6.js'))
-      .pipe(gulp.dest('dist'));
+    if (tplName === pkg.name) {
+      tplSrc.pipe(clone())
+        .pipe(tributary(es6src))
+        .pipe(rename(tplName + '.es6.js'))
+        .pipe(gulp.dest('dist'));
+    }
+    else {
+      tplName = pkg.name + '.' + tplName;
+    }
 
     // Create compatible dist.
-    tplSrc.pipe(tributary(src))
+    tplSrc = tplSrc.pipe(tributary(src))
       .pipe(rename(tplName + '.js'))
-      .pipe(gulp.dest('dist'))
-      // Create minified version.
-      .pipe(uglify())
-      .pipe(rename(tplName + '.min.js'))
       .pipe(gulp.dest('dist'));
+
+    // Create minified version.
+    if (tplName === pkg.name) {
+      tplSrc.pipe(uglify())
+        .pipe(rename(tplName + '.min.js'))
+        .pipe(gulp.dest('dist'));
+    }
   });
 });
