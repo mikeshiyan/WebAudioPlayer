@@ -1,0 +1,27 @@
+{
+  "name": "web_audio_player",
+  "description": "Audio player using Web Audio API.",
+  "main": "dist/web_audio_player.js",
+  "moduleType": "globals",
+  "authors": [
+    "Mike Shiyan"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "browser",
+    "player",
+    "web"
+  ],
+  "homepage": "https://github.com/mikeshiyan/WebAudioPlayer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikeshiyan/WebAudioPlayer.git"
+  },
+  "ignore": [
+    "/*",
+    "!dist/",
+    "!LICENSE.txt",
+    "!README.md"
+  ]
+}
