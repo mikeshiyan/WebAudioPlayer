@@ -1,0 +1,26 @@
+<script src="../dist/web_audio_player.min.js"></script>
+<script>
+  var player = new WebAudioPlayer();
+  var currentTrack;
+
+  player
+    // Equalizer wave similar to the WinAmp's 'Rock' preset.
+    .setEq([4.76, 3.617, 0, -3.375, -3, 0, 4.76, 5.9, 5.9, 5.52])
+    // Audio by Jack Strait.
+    // http://www.flashkit.com/loops/Easy_Listening/Easy_Listening/after-the-rain-150527192016.html
+    .loadUrl(['https://dl.dropboxusercontent.com/s/gmu0htaucqrn95t/after_the_rain.mp3?dl=1'])
+    .then(function (track) {
+      currentTrack = track.play();
+
+      currentTrack.addEventListener('finished', function () {
+        console.log('played:', this.getDuration(), 's');
+      });
+
+      currentTrack.when(5.5, function () {
+        console.log('played 5.5s (', this.getPlayedTime(), ')');
+      });
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+</script>
