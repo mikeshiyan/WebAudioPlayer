@@ -3,14 +3,13 @@
 /**
  * The main, public class, providing general methods.
  *
- * @namespace
+ * @extends EventTarget
+ * @global
  */
 class WebAudioPlayer extends EventTarget {
 
   /**
    * Constructs a WebAudioPlayer object.
-   *
-   * @constructor
    */
   constructor() {
     super();
@@ -42,7 +41,7 @@ class WebAudioPlayer extends EventTarget {
     /**
      * Runs code while audio is processing.
      *
-     * @fires audioprocess
+     * @fires WebAudioPlayer#audioprocess
      */
     audio.ScriptProcessor.onaudioprocess = function () {
 
@@ -54,7 +53,9 @@ class WebAudioPlayer extends EventTarget {
        * fire their own 'playing' event to indicate when the corresponding track
        * is actually playing.
        *
-       * @event audioprocess
+       * @event WebAudioPlayer#audioprocess
+       *
+       * @see {@link Track#event:playing}
        */
       player.dispatchEvent('audioprocess');
     };
@@ -84,7 +85,7 @@ class WebAudioPlayer extends EventTarget {
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @return {Promise}
+   * @return {Promise.<Track, Error>}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {Track} The Track object.

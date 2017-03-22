@@ -2,15 +2,11 @@
 
 /**
  * Links to the internal AudioContext and related objects.
- *
- * @namespace
  */
 class Audio {
 
   /**
    * Constructs an Audio object.
-   *
-   * @constructor
    */
   constructor() {
 

@@ -1,16 +1,30 @@
 'use strict';
 
 /**
+ * Callback to execute on events.
+ *
+ * The callback context is the object on which the addEventListener() method was
+ * called.
+ *
+ * @callback eventListener
+ * @param {...*} arguments
+ *   Any number of arguments supplied to the dispatchEvent() method (except its
+ *   first argument - event type).
+ *
+ * @this EventTarget
+ *
+ * @see {@link EventTarget#dispatchEvent}
+ */
+
+/**
  * Provides methods to work with events.
  *
- * @namespace
+ * Meant to be extended by other classes.
  */
 class EventTarget {
 
   /**
    * Constructs an EventTarget object.
-   *
-   * @constructor
    */
   constructor() {
 
@@ -29,8 +43,8 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type to listen for.
-   * @param {function} callback
-   *   Event handler to call.
+   * @param {eventListener} callback
+   *   Event handler to call when event occurs.
    */
   addEventListener(type, callback) {
     if (!(type in this.eventListeners)) {
@@ -57,7 +71,7 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type.
-   * @param {function} callback
+   * @param {eventListener} callback
    *   Event handler to remove.
    */
   removeEventListener(type, callback) {
@@ -78,6 +92,8 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type to dispatch.
+   * @param {...*} other_arguments
+   *   Other arguments to supply to event listeners.
    */
   dispatchEvent(type) {
     if (type in this.eventListeners) {

@@ -11,8 +11,6 @@
 
 /**
  * Contains various utility methods.
- *
- * @namespace
  */
 class Utility {
 
@@ -22,7 +20,7 @@ class Utility {
    * @param {string} url
    *   URL to get.
    *
-   * @return {Promise}
+   * @return {Promise.<ArrayBuffer, Error>}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {ArrayBuffer} The ArrayBuffer object.
@@ -58,7 +56,7 @@ class Utility {
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @return {Promise|undefined}
+   * @return {Promise.<Track, Error>|undefined}
    *   The Promise object if one exists at least for one of given URLs.
    *   Fulfill callback arguments:
    *   - {Track} The Track object.
@@ -143,16 +141,30 @@ Utility.urlPromises = {};
 'use strict';
 
 /**
+ * Callback to execute on events.
+ *
+ * The callback context is the object on which the addEventListener() method was
+ * called.
+ *
+ * @callback eventListener
+ * @param {...*} arguments
+ *   Any number of arguments supplied to the dispatchEvent() method (except its
+ *   first argument - event type).
+ *
+ * @this EventTarget
+ *
+ * @see {@link EventTarget#dispatchEvent}
+ */
+
+/**
  * Provides methods to work with events.
  *
- * @namespace
+ * Meant to be extended by other classes.
  */
 class EventTarget {
 
   /**
    * Constructs an EventTarget object.
-   *
-   * @constructor
    */
   constructor() {
 
@@ -171,8 +183,8 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type to listen for.
-   * @param {function} callback
-   *   Event handler to call.
+   * @param {eventListener} callback
+   *   Event handler to call when event occurs.
    */
   addEventListener(type, callback) {
     if (!(type in this.eventListeners)) {
@@ -199,7 +211,7 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type.
-   * @param {function} callback
+   * @param {eventListener} callback
    *   Event handler to remove.
    */
   removeEventListener(type, callback) {
@@ -220,6 +232,8 @@ class EventTarget {
    *
    * @param {string} type
    *   Event type to dispatch.
+   * @param {...*} other_arguments
+   *   Other arguments to supply to event listeners.
    */
   dispatchEvent(type) {
     if (type in this.eventListeners) {
@@ -238,15 +252,11 @@ class EventTarget {
 
 /**
  * Links to the internal AudioContext and related objects.
- *
- * @namespace
  */
 class Audio {
 
   /**
    * Constructs an Audio object.
-   *
-   * @constructor
    */
   constructor() {
 
@@ -328,16 +338,24 @@ class Audio {
 'use strict';
 
 /**
+ * Callback to execute on time markers.
+ *
+ * @callback markerCallback
+ *
+ * @this Track
+ *
+ * @see {@link Track#when}
+ */
+
+/**
  * Provides audiotrack-specific methods.
  *
- * @namespace
+ * @extends EventTarget
  */
 class Track extends EventTarget {
 
   /**
    * Constructs a Track object.
-   *
-   * @constructor
    *
    * @param {AudioBuffer} buffer
    *   The AudioBuffer object containing raw audio data.
@@ -363,7 +381,7 @@ class Track extends EventTarget {
      *
      * @type {object[]}
      *
-     * @see when
+     * @see {@link Track#when}
      */
     let markers = [];
 
@@ -372,7 +390,7 @@ class Track extends EventTarget {
      *
      * @type {object[]}
      *
-     * @see markers
+     * @see {@link markers}
      */
     let markersToFire = [];
 
@@ -452,7 +470,8 @@ class Track extends EventTarget {
     /**
      * Makes the routine work while track is playing.
      *
-     * @fires playing
+     * @listens WebAudioPlayer#event:audioprocess
+     * @fires Track#playing
      */
     const audioprocess = function () {
       if (isPlaying) {
@@ -466,7 +485,7 @@ class Track extends EventTarget {
         /**
          * Indicates that the track is playing.
          *
-         * @event playing
+         * @event Track#playing
          */
         track.dispatchEvent('playing');
       }
@@ -493,7 +512,9 @@ class Track extends EventTarget {
         /**
          * Runs code in response to the audio track finishing playback.
          *
-         * @fires finished
+         * @fires Track#finished
+         *
+         * @this AudioBufferSourceNode
          */
         source.onended = function () {
           this.finished = true;
@@ -508,7 +529,7 @@ class Track extends EventTarget {
             /**
              * Indicates that the track has finished playing.
              *
-             * @event finished
+             * @event Track#finished
              */
             track.dispatchEvent('finished');
             player.removeEventListener('audioprocess', audioprocess);
@@ -616,7 +637,7 @@ class Track extends EventTarget {
      *
      * @param {number} marker
      *   A time marker in seconds of actual playback.
-     * @param {function} callback
+     * @param {markerCallback} callback
      *   A callback to execute when marker is reached.
      *
      * @return {Track}
@@ -625,7 +646,7 @@ class Track extends EventTarget {
      * @throws {TypeError}
      *   If marker is negative.
      *
-     * @see getPlayedTime
+     * @see {@link Track#getPlayedTime}
      */
     this.when = function (marker, callback) {
       if (marker < 0) {
@@ -687,14 +708,13 @@ class Track extends EventTarget {
 /**
  * The main, public class, providing general methods.
  *
- * @namespace
+ * @extends EventTarget
+ * @global
  */
 class WebAudioPlayer extends EventTarget {
 
   /**
    * Constructs a WebAudioPlayer object.
-   *
-   * @constructor
    */
   constructor() {
     super();
@@ -726,7 +746,7 @@ class WebAudioPlayer extends EventTarget {
     /**
      * Runs code while audio is processing.
      *
-     * @fires audioprocess
+     * @fires WebAudioPlayer#audioprocess
      */
     audio.ScriptProcessor.onaudioprocess = function () {
 
@@ -738,7 +758,9 @@ class WebAudioPlayer extends EventTarget {
        * fire their own 'playing' event to indicate when the corresponding track
        * is actually playing.
        *
-       * @event audioprocess
+       * @event WebAudioPlayer#audioprocess
+       *
+       * @see {@link Track#event:playing}
        */
       player.dispatchEvent('audioprocess');
     };
@@ -768,7 +790,7 @@ class WebAudioPlayer extends EventTarget {
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @return {Promise}
+   * @return {Promise.<Track, Error>}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {Track} The Track object.

@@ -1,16 +1,24 @@
 'use strict';
 
 /**
+ * Callback to execute on time markers.
+ *
+ * @callback markerCallback
+ *
+ * @this Track
+ *
+ * @see {@link Track#when}
+ */
+
+/**
  * Provides audiotrack-specific methods.
  *
- * @namespace
+ * @extends EventTarget
  */
 class Track extends EventTarget {
 
   /**
    * Constructs a Track object.
-   *
-   * @constructor
    *
    * @param {AudioBuffer} buffer
    *   The AudioBuffer object containing raw audio data.
@@ -36,7 +44,7 @@ class Track extends EventTarget {
      *
      * @type {object[]}
      *
-     * @see when
+     * @see {@link Track#when}
      */
     let markers = [];
 
@@ -45,7 +53,7 @@ class Track extends EventTarget {
      *
      * @type {object[]}
      *
-     * @see markers
+     * @see {@link markers}
      */
     let markersToFire = [];
 
@@ -125,7 +133,8 @@ class Track extends EventTarget {
     /**
      * Makes the routine work while track is playing.
      *
-     * @fires playing
+     * @listens WebAudioPlayer#event:audioprocess
+     * @fires Track#playing
      */
     const audioprocess = function () {
       if (isPlaying) {
@@ -139,7 +148,7 @@ class Track extends EventTarget {
         /**
          * Indicates that the track is playing.
          *
-         * @event playing
+         * @event Track#playing
          */
         track.dispatchEvent('playing');
       }
@@ -166,7 +175,9 @@ class Track extends EventTarget {
         /**
          * Runs code in response to the audio track finishing playback.
          *
-         * @fires finished
+         * @fires Track#finished
+         *
+         * @this AudioBufferSourceNode
          */
         source.onended = function () {
           this.finished = true;
@@ -181,7 +192,7 @@ class Track extends EventTarget {
             /**
              * Indicates that the track has finished playing.
              *
-             * @event finished
+             * @event Track#finished
              */
             track.dispatchEvent('finished');
             player.removeEventListener('audioprocess', audioprocess);
@@ -289,7 +300,7 @@ class Track extends EventTarget {
      *
      * @param {number} marker
      *   A time marker in seconds of actual playback.
-     * @param {function} callback
+     * @param {markerCallback} callback
      *   A callback to execute when marker is reached.
      *
      * @return {Track}
@@ -298,7 +309,7 @@ class Track extends EventTarget {
      * @throws {TypeError}
      *   If marker is negative.
      *
-     * @see getPlayedTime
+     * @see {@link Track#getPlayedTime}
      */
     this.when = function (marker, callback) {
       if (marker < 0) {

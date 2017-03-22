@@ -2,8 +2,6 @@
 
 /**
  * Contains various utility methods.
- *
- * @namespace
  */
 class Utility {
 
@@ -13,7 +11,7 @@ class Utility {
    * @param {string} url
    *   URL to get.
    *
-   * @return {Promise}
+   * @return {Promise.<ArrayBuffer, Error>}
    *   The Promise object.
    *   Fulfill callback arguments:
    *   - {ArrayBuffer} The ArrayBuffer object.
@@ -49,7 +47,7 @@ class Utility {
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @return {Promise|undefined}
+   * @return {Promise.<Track, Error>|undefined}
    *   The Promise object if one exists at least for one of given URLs.
    *   Fulfill callback arguments:
    *   - {Track} The Track object.
