@@ -9,6 +9,7 @@ var tributary = require('gulp-tributary');
 var replace = require('gulp-replace');
 var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
+var jsdoc2md = require('gulp-jsdoc-to-markdown');
 
 gulp.task('build', function () {
   del(['dist']);
@@ -38,7 +39,11 @@ gulp.task('build', function () {
       tplSrc.pipe(clone())
         .pipe(tributary(es6src))
         .pipe(rename(tplName + '.es6.js'))
-        .pipe(gulp.dest('dist'));
+        .pipe(gulp.dest('dist'))
+        // Create API doc.
+        .pipe(jsdoc2md())
+        .pipe(rename('API.md'))
+        .pipe(gulp.dest('.'));
     }
     else {
       tplName = pkg.name + '.' + tplName;

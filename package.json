@@ -30,6 +30,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-clone": "^1.0.0",
     "gulp-concat": "^2.6.1",
+    "gulp-jsdoc-to-markdown": "^1.2.2",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
     "gulp-tributary": "^1.1.2",
