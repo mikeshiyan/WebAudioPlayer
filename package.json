@@ -7,7 +7,7 @@
   ],
   "main": "dist/web_audio_player.common.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp test"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-clone": "^1.0.0",
     "gulp-concat": "^2.6.1",
+    "gulp-eslint": "^3.0.1",
     "gulp-jsdoc-to-markdown": "^1.2.2",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
