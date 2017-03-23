@@ -7,7 +7,8 @@
   ],
   "main": "dist/web_audio_player.common.js",
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "version": "gulp build && gulp test && git add -A dist"
   },
   "repository": {
     "type": "git",
