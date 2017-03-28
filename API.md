@@ -42,7 +42,8 @@ Contains various utility methods.
 * [Utility](#Utility)
     * [.audio](#Utility.audio) ⇒ <code>[Audio](#Audio)</code>
     * [.getArrayBuffer(url)](#Utility.getArrayBuffer) ⇒ <code>Promise.&lt;ArrayBuffer, Error&gt;</code>
-    * [.getUrlPromise(urls)](#Utility.getUrlPromise) ⇒ <code>Promise.&lt;Track, Error&gt;</code> &#124; <code>undefined</code>
+    * [.loadUrl(urls)](#Utility.loadUrl) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code>
+    * [.getUrlPromise(urls)](#Utility.getUrlPromise) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code> &#124; <code>undefined</code>
     * [.removeUrlPromise(urls)](#Utility.removeUrlPromise)
     * [.setUrlPromise(urls, promise)](#Utility.setUrlPromise)
     * [.readStorage(key)](#Utility.readStorage) ⇒ <code>\*</code> &#124; <code>null</code> &#124; <code>undefined</code>
@@ -71,15 +72,31 @@ Makes an XMLHttpRequest to url to get an array buffer.
 | --- | --- | --- |
 | url | <code>string</code> | URL to get. |
 
+<a name="Utility.loadUrl"></a>
+
+### Utility.loadUrl(urls) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code>
+Loads the audio file by URL into buffer.
+
+**Kind**: static method of <code>[Utility](#Utility)</code>  
+**Returns**: <code>Promise.&lt;AudioBuffer, Error&gt;</code> - The Promise object.
+  Fulfill callback arguments:
+  - {AudioBuffer} The AudioBuffer object containing raw audio data.
+  Reject callback arguments:
+  - {Error} The Error object.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| urls | <code>Array.&lt;string&gt;</code> | An array of mirror URLs. |
+
 <a name="Utility.getUrlPromise"></a>
 
-### Utility.getUrlPromise(urls) ⇒ <code>Promise.&lt;Track, Error&gt;</code> &#124; <code>undefined</code>
+### Utility.getUrlPromise(urls) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code> &#124; <code>undefined</code>
 Gets a promise about loading URLs.
 
 **Kind**: static method of <code>[Utility](#Utility)</code>  
-**Returns**: <code>Promise.&lt;Track, Error&gt;</code> &#124; <code>undefined</code> - The Promise object if one exists at least for one of given URLs.
+**Returns**: <code>Promise.&lt;AudioBuffer, Error&gt;</code> &#124; <code>undefined</code> - The Promise object if one exists at least for one of given URLs.
   Fulfill callback arguments:
-  - {Track} The Track object.
+  - {AudioBuffer} The AudioBuffer object containing raw audio data.
   Reject callback arguments:
   - {Error} The Error object.  
 
@@ -485,7 +502,7 @@ Returns the Audio object.
 <a name="WebAudioPlayer+loadUrl"></a>
 
 ### webAudioPlayer.loadUrl(urls) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
-Loads the audio file by URL into buffer.
+Loads the audio file into the Track object.
 
 This method takes an array of URLs (presumably pointing to the same audio
 file) as the only argument, and will stop and fulfill the promise after

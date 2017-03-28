@@ -65,7 +65,7 @@ class WebAudioPlayer extends EventTarget {
   }
 
   /**
-   * Loads the audio file by URL into buffer.
+   * Loads the audio file into the Track object.
    *
    * This method takes an array of URLs (presumably pointing to the same audio
    * file) as the only argument, and will stop and fulfill the promise after
@@ -87,28 +87,10 @@ class WebAudioPlayer extends EventTarget {
    */
   loadUrl(urls) {
     let player = this;
-    let promise = Utility.getUrlPromise(urls);
 
-    if (!promise) {
-      promise = urls.reduce(function (sequence, url) {
-        return sequence.catch(function () {
-          return Utility.getArrayBuffer(url).then(function (data) {
-            return Utility.audio.OfflineContext.decodeAudioData(data);
-          });
-        });
-      }, Promise.reject())
-        .then(function (data) {
-          Utility.removeUrlPromise(urls);
-          return new Track(data, player);
-        })
-        .catch(function () {
-          throw new Error('No valid audio URLs provided.');
-        });
-
-      Utility.setUrlPromise(urls, promise);
-    }
-
-    return promise;
+    return Utility.loadUrl(urls).then(function (buffer) {
+      return new Track(buffer, player);
+    });
   }
 
   /**

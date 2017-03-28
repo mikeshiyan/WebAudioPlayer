@@ -81,15 +81,54 @@ var Utility = function () {
     }
 
     /**
+     * Loads the audio file by URL into buffer.
+     *
+     * @param {string[]} urls
+     *   An array of mirror URLs.
+     *
+     * @return {Promise.<AudioBuffer, Error>}
+     *   The Promise object.
+     *   Fulfill callback arguments:
+     *   - {AudioBuffer} The AudioBuffer object containing raw audio data.
+     *   Reject callback arguments:
+     *   - {Error} The Error object.
+     */
+
+  }, {
+    key: 'loadUrl',
+    value: function loadUrl(urls) {
+      var promise = Utility.getUrlPromise(urls);
+
+      if (!promise) {
+        promise = urls.reduce(function (sequence, url) {
+          return sequence.catch(function () {
+            return Utility.getArrayBuffer(url).then(function (data) {
+              return Utility.audio.OfflineContext.decodeAudioData(data);
+            });
+          });
+        }, Promise.reject()).then(function (buffer) {
+          Utility.removeUrlPromise(urls);
+          return buffer;
+        }).catch(function () {
+          throw new Error('No valid audio URLs provided.');
+        });
+
+        Utility.setUrlPromise(urls, promise);
+      }
+
+      return promise;
+    }
+
+    /**
      * Gets a promise about loading URLs.
      *
      * @param {string[]} urls
      *   An array of mirror URLs.
      *
-     * @return {Promise.<Track, Error>|undefined}
+     * @return {Promise.<AudioBuffer, Error>|undefined}
      *   The Promise object if one exists at least for one of given URLs.
      *   Fulfill callback arguments:
-     *   - {Track} The Track object.
+     *   - {AudioBuffer} The AudioBuffer object containing raw audio data.
      *   Reject callback arguments:
      *   - {Error} The Error object.
      */
@@ -848,7 +887,7 @@ var WebAudioPlayer = function (_EventTarget2) {
     }
 
     /**
-     * Loads the audio file by URL into buffer.
+     * Loads the audio file into the Track object.
      *
      * This method takes an array of URLs (presumably pointing to the same audio
      * file) as the only argument, and will stop and fulfill the promise after
@@ -873,26 +912,10 @@ var WebAudioPlayer = function (_EventTarget2) {
     key: 'loadUrl',
     value: function loadUrl(urls) {
       var player = this;
-      var promise = Utility.getUrlPromise(urls);
 
-      if (!promise) {
-        promise = urls.reduce(function (sequence, url) {
-          return sequence.catch(function () {
-            return Utility.getArrayBuffer(url).then(function (data) {
-              return Utility.audio.OfflineContext.decodeAudioData(data);
-            });
-          });
-        }, Promise.reject()).then(function (data) {
-          Utility.removeUrlPromise(urls);
-          return new Track(data, player);
-        }).catch(function () {
-          throw new Error('No valid audio URLs provided.');
-        });
-
-        Utility.setUrlPromise(urls, promise);
-      }
-
-      return promise;
+      return Utility.loadUrl(urls).then(function (buffer) {
+        return new Track(buffer, player);
+      });
     }
 
     /**

@@ -58,15 +58,53 @@ class Utility {
   }
 
   /**
+   * Loads the audio file by URL into buffer.
+   *
+   * @param {string[]} urls
+   *   An array of mirror URLs.
+   *
+   * @return {Promise.<AudioBuffer, Error>}
+   *   The Promise object.
+   *   Fulfill callback arguments:
+   *   - {AudioBuffer} The AudioBuffer object containing raw audio data.
+   *   Reject callback arguments:
+   *   - {Error} The Error object.
+   */
+  static loadUrl(urls) {
+    let promise = Utility.getUrlPromise(urls);
+
+    if (!promise) {
+      promise = urls.reduce(function (sequence, url) {
+        return sequence.catch(function () {
+          return Utility.getArrayBuffer(url).then(function (data) {
+            return Utility.audio.OfflineContext.decodeAudioData(data);
+          });
+        });
+      }, Promise.reject())
+        .then(function (buffer) {
+          Utility.removeUrlPromise(urls);
+          return buffer;
+        })
+        .catch(function () {
+          throw new Error('No valid audio URLs provided.');
+        });
+
+      Utility.setUrlPromise(urls, promise);
+    }
+
+    return promise;
+  }
+
+  /**
    * Gets a promise about loading URLs.
    *
    * @param {string[]} urls
    *   An array of mirror URLs.
    *
-   * @return {Promise.<Track, Error>|undefined}
+   * @return {Promise.<AudioBuffer, Error>|undefined}
    *   The Promise object if one exists at least for one of given URLs.
    *   Fulfill callback arguments:
-   *   - {Track} The Track object.
+   *   - {AudioBuffer} The AudioBuffer object containing raw audio data.
    *   Reject callback arguments:
    *   - {Error} The Error object.
    */
