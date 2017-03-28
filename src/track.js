@@ -162,14 +162,15 @@ class Track extends EventTarget {
      */
     this.play = function () {
       if (!isPlaying && offset < buffer.duration) {
+        const audio = Utility.audio;
         isPlaying = true;
         offset = Math.max(offset, 0);
         let duration = Math.max(buffer.duration - offset, 0);
 
         player.addEventListener('audioprocess', audioprocess);
 
-        source = player.getAudio().Context.createBufferSource();
-        source.connect(player.getAudio().Analyser);
+        source = audio.Context.createBufferSource();
+        source.connect(audio.Analyser);
         source.buffer = buffer;
 
         /**
@@ -202,7 +203,7 @@ class Track extends EventTarget {
           }
         };
 
-        playStartedAt = player.getAudio().Context.currentTime;
+        playStartedAt = audio.Context.currentTime;
         source.start(0, offset, duration);
       }
 
@@ -248,7 +249,7 @@ class Track extends EventTarget {
       }
 
       if (wasPlaying) {
-        offset += player.getAudio().Context.currentTime - playStartedAt;
+        offset += Utility.audio.Context.currentTime - playStartedAt;
       }
 
       player.removeEventListener('audioprocess', audioprocess);
@@ -330,7 +331,7 @@ class Track extends EventTarget {
      *   Seconds from the start of an audio file.
      */
     this.getCurrentTime = function () {
-      return isPlaying ? player.getAudio().Context.currentTime - playStartedAt + offset : offset;
+      return isPlaying ? Utility.audio.Context.currentTime - playStartedAt + offset : offset;
     };
 
     /**

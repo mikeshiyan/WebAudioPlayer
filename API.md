@@ -40,6 +40,7 @@ Contains various utility methods.
 **Kind**: global class  
 
 * [Utility](#Utility)
+    * [.audio](#Utility.audio) ⇒ <code>[Audio](#Audio)</code>
     * [.getArrayBuffer(url)](#Utility.getArrayBuffer) ⇒ <code>Promise.&lt;ArrayBuffer, Error&gt;</code>
     * [.getUrlPromise(urls)](#Utility.getUrlPromise) ⇒ <code>Promise.&lt;Track, Error&gt;</code> &#124; <code>undefined</code>
     * [.removeUrlPromise(urls)](#Utility.removeUrlPromise)
@@ -47,6 +48,13 @@ Contains various utility methods.
     * [.readStorage(key)](#Utility.readStorage) ⇒ <code>\*</code> &#124; <code>null</code> &#124; <code>undefined</code>
     * [.updateStorage(key, value)](#Utility.updateStorage)
 
+<a name="Utility.audio"></a>
+
+### Utility.audio ⇒ <code>[Audio](#Audio)</code>
+Returns the Audio object.
+
+**Kind**: static property of <code>[Utility](#Utility)</code>  
+**Returns**: <code>[Audio](#Audio)</code> - The Audio object.  
 <a name="Utility.getArrayBuffer"></a>
 
 ### Utility.getArrayBuffer(url) ⇒ <code>Promise.&lt;ArrayBuffer, Error&gt;</code>

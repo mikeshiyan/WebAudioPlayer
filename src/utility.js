@@ -1,6 +1,13 @@
 'use strict';
 
 /**
+ * The Audio object.
+ *
+ * @type {Audio}
+ */
+let _audio;
+
+/**
  * Contains various utility methods.
  */
 class Utility {
@@ -116,6 +123,20 @@ class Utility {
     if (typeof localStorage != 'undefined') {
       localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
     }
+  }
+
+  /**
+   * Returns the Audio object.
+   *
+   * @return {Audio}
+   *   The Audio object.
+   */
+  static get audio() {
+    if (!_audio) {
+      _audio = new Audio();
+    }
+
+    return _audio;
   }
 
 }

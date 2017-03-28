@@ -10,6 +10,13 @@
 'use strict';
 
 /**
+ * The Audio object.
+ *
+ * @type {Audio}
+ */
+let _audio;
+
+/**
  * Contains various utility methods.
  */
 class Utility {
@@ -125,6 +132,20 @@ class Utility {
     if (typeof localStorage != 'undefined') {
       localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
     }
+  }
+
+  /**
+   * Returns the Audio object.
+   *
+   * @return {Audio}
+   *   The Audio object.
+   */
+  static get audio() {
+    if (!_audio) {
+      _audio = new Audio();
+    }
+
+    return _audio;
   }
 
 }
@@ -499,14 +520,15 @@ class Track extends EventTarget {
      */
     this.play = function () {
       if (!isPlaying && offset < buffer.duration) {
+        const audio = Utility.audio;
         isPlaying = true;
         offset = Math.max(offset, 0);
         let duration = Math.max(buffer.duration - offset, 0);
 
         player.addEventListener('audioprocess', audioprocess);
 
-        source = player.getAudio().Context.createBufferSource();
-        source.connect(player.getAudio().Analyser);
+        source = audio.Context.createBufferSource();
+        source.connect(audio.Analyser);
         source.buffer = buffer;
 
         /**
@@ -539,7 +561,7 @@ class Track extends EventTarget {
           }
         };
 
-        playStartedAt = player.getAudio().Context.currentTime;
+        playStartedAt = audio.Context.currentTime;
         source.start(0, offset, duration);
       }
 
@@ -585,7 +607,7 @@ class Track extends EventTarget {
       }
 
       if (wasPlaying) {
-        offset += player.getAudio().Context.currentTime - playStartedAt;
+        offset += Utility.audio.Context.currentTime - playStartedAt;
       }
 
       player.removeEventListener('audioprocess', audioprocess);
@@ -667,7 +689,7 @@ class Track extends EventTarget {
      *   Seconds from the start of an audio file.
      */
     this.getCurrentTime = function () {
-      return isPlaying ? player.getAudio().Context.currentTime - playStartedAt + offset : offset;
+      return isPlaying ? Utility.audio.Context.currentTime - playStartedAt + offset : offset;
     };
 
     /**
@@ -720,13 +742,6 @@ class WebAudioPlayer extends EventTarget {
     super();
 
     /**
-     * The Audio object.
-     *
-     * @type {Audio}
-     */
-    let audio = new Audio();
-
-    /**
      * Contains this WebAudioPlayer object.
      *
      * @type {WebAudioPlayer}
@@ -734,21 +749,11 @@ class WebAudioPlayer extends EventTarget {
     let player = this;
 
     /**
-     * Returns the Audio object.
-     *
-     * @return {Audio}
-     *   The Audio object.
-     */
-    this.getAudio = function () {
-      return audio;
-    };
-
-    /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
-    audio.ScriptProcessor.onaudioprocess = function () {
+    Utility.audio.ScriptProcessor.onaudioprocess = function () {
 
       /**
        * Indicates that audio is processing.
@@ -774,6 +779,16 @@ class WebAudioPlayer extends EventTarget {
     if (vol) {
       this.setVolume(vol);
     }
+  }
+
+  /**
+   * Returns the Audio object.
+   *
+   * @return {Audio}
+   *   The Audio object.
+   */
+  getAudio() {
+    return Utility.audio;
   }
 
   /**
@@ -805,7 +820,7 @@ class WebAudioPlayer extends EventTarget {
       promise = urls.reduce(function (sequence, url) {
         return sequence.catch(function () {
           return Utility.getArrayBuffer(url).then(function (data) {
-            return player.getAudio().OfflineContext.decodeAudioData(data);
+            return Utility.audio.OfflineContext.decodeAudioData(data);
           });
         });
       }, Promise.reject())
@@ -833,7 +848,7 @@ class WebAudioPlayer extends EventTarget {
    *   The WebAudioPlayer object.
    */
   setVolume(gain) {
-    this.getAudio().Gain.gain.value = gain;
+    Utility.audio.Gain.gain.value = gain;
 
     Utility.updateStorage('vol', gain);
 
@@ -847,7 +862,7 @@ class WebAudioPlayer extends EventTarget {
    *   Previously set value.
    */
   getVolume() {
-    return this.getAudio().Gain.gain.value;
+    return Utility.audio.Gain.gain.value;
   }
 
   /**
@@ -863,9 +878,11 @@ class WebAudioPlayer extends EventTarget {
    *   The WebAudioPlayer object.
    */
   setEq(bands) {
+    const audio = Utility.audio;
+
     for (let i in bands) {
-      if (bands.hasOwnProperty(i) && this.getAudio().filters[i]) {
-        this.getAudio().filters[i].gain.value = bands[i];
+      if (bands.hasOwnProperty(i) && audio.filters[i]) {
+        audio.filters[i].gain.value = bands[i];
       }
     }
 
@@ -883,7 +900,7 @@ class WebAudioPlayer extends EventTarget {
   getEq() {
     let bands = [];
 
-    this.getAudio().filters.forEach(function (filter) {
+    Utility.audio.filters.forEach(function (filter) {
       bands.push(filter.gain.value);
     });
 

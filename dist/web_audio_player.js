@@ -10,7 +10,9 @@
 'use strict';
 
 /**
- * Contains various utility methods.
+ * The Audio object.
+ *
+ * @type {Audio}
  */
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -20,6 +22,12 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _audio = void 0;
+
+/**
+ * Contains various utility methods.
+ */
 
 var Utility = function () {
   function Utility() {
@@ -155,6 +163,23 @@ var Utility = function () {
       if (typeof localStorage != 'undefined') {
         localStorage.setItem('WebAudioPlayer.' + key, JSON.stringify(value));
       }
+    }
+
+    /**
+     * Returns the Audio object.
+     *
+     * @return {Audio}
+     *   The Audio object.
+     */
+
+  }, {
+    key: 'audio',
+    get: function get() {
+      if (!_audio) {
+        _audio = new Audio();
+      }
+
+      return _audio;
     }
   }]);
 
@@ -545,14 +570,15 @@ var Track = function (_EventTarget) {
      */
     _this.play = function () {
       if (!isPlaying && offset < buffer.duration) {
+        var audio = Utility.audio;
         isPlaying = true;
         offset = Math.max(offset, 0);
         var duration = Math.max(buffer.duration - offset, 0);
 
         player.addEventListener('audioprocess', audioprocess);
 
-        source = player.getAudio().Context.createBufferSource();
-        source.connect(player.getAudio().Analyser);
+        source = audio.Context.createBufferSource();
+        source.connect(audio.Analyser);
         source.buffer = buffer;
 
         /**
@@ -585,7 +611,7 @@ var Track = function (_EventTarget) {
           }
         };
 
-        playStartedAt = player.getAudio().Context.currentTime;
+        playStartedAt = audio.Context.currentTime;
         source.start(0, offset, duration);
       }
 
@@ -631,7 +657,7 @@ var Track = function (_EventTarget) {
       }
 
       if (wasPlaying) {
-        offset += player.getAudio().Context.currentTime - playStartedAt;
+        offset += Utility.audio.Context.currentTime - playStartedAt;
       }
 
       player.removeEventListener('audioprocess', audioprocess);
@@ -712,7 +738,7 @@ var Track = function (_EventTarget) {
      *   Seconds from the start of an audio file.
      */
     _this.getCurrentTime = function () {
-      return isPlaying ? player.getAudio().Context.currentTime - playStartedAt + offset : offset;
+      return isPlaying ? Utility.audio.Context.currentTime - playStartedAt + offset : offset;
     };
 
     /**
@@ -769,37 +795,20 @@ var WebAudioPlayer = function (_EventTarget2) {
     _classCallCheck(this, WebAudioPlayer);
 
     /**
-     * The Audio object.
-     *
-     * @type {Audio}
-     */
-    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
-
-    var audio = new Audio();
-
-    /**
      * Contains this WebAudioPlayer object.
      *
      * @type {WebAudioPlayer}
      */
-    var player = _this2;
+    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
 
-    /**
-     * Returns the Audio object.
-     *
-     * @return {Audio}
-     *   The Audio object.
-     */
-    _this2.getAudio = function () {
-      return audio;
-    };
+    var player = _this2;
 
     /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
-    audio.ScriptProcessor.onaudioprocess = function () {
+    Utility.audio.ScriptProcessor.onaudioprocess = function () {
 
       /**
        * Indicates that audio is processing.
@@ -829,29 +838,42 @@ var WebAudioPlayer = function (_EventTarget2) {
   }
 
   /**
-   * Loads the audio file by URL into buffer.
+   * Returns the Audio object.
    *
-   * This method takes an array of URLs (presumably pointing to the same audio
-   * file) as the only argument, and will stop and fulfill the promise after
-   * the first valid audio URL found.
-   *
-   * Multiple simultaneous calls to this method providing the same (or
-   * intersecting) URL sets will receive the same Promise object, which when
-   * fulfilled will return the same Track object for all callers.
-   *
-   * @param {string[]} urls
-   *   An array of mirror URLs.
-   *
-   * @return {Promise.<Track, Error>}
-   *   The Promise object.
-   *   Fulfill callback arguments:
-   *   - {Track} The Track object.
-   *   Reject callback arguments:
-   *   - {Error} The Error object.
+   * @return {Audio}
+   *   The Audio object.
    */
 
 
   _createClass(WebAudioPlayer, [{
+    key: 'getAudio',
+    value: function getAudio() {
+      return Utility.audio;
+    }
+
+    /**
+     * Loads the audio file by URL into buffer.
+     *
+     * This method takes an array of URLs (presumably pointing to the same audio
+     * file) as the only argument, and will stop and fulfill the promise after
+     * the first valid audio URL found.
+     *
+     * Multiple simultaneous calls to this method providing the same (or
+     * intersecting) URL sets will receive the same Promise object, which when
+     * fulfilled will return the same Track object for all callers.
+     *
+     * @param {string[]} urls
+     *   An array of mirror URLs.
+     *
+     * @return {Promise.<Track, Error>}
+     *   The Promise object.
+     *   Fulfill callback arguments:
+     *   - {Track} The Track object.
+     *   Reject callback arguments:
+     *   - {Error} The Error object.
+     */
+
+  }, {
     key: 'loadUrl',
     value: function loadUrl(urls) {
       var player = this;
@@ -861,7 +883,7 @@ var WebAudioPlayer = function (_EventTarget2) {
         promise = urls.reduce(function (sequence, url) {
           return sequence.catch(function () {
             return Utility.getArrayBuffer(url).then(function (data) {
-              return player.getAudio().OfflineContext.decodeAudioData(data);
+              return Utility.audio.OfflineContext.decodeAudioData(data);
             });
           });
         }, Promise.reject()).then(function (data) {
@@ -890,7 +912,7 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'setVolume',
     value: function setVolume(gain) {
-      this.getAudio().Gain.gain.value = gain;
+      Utility.audio.Gain.gain.value = gain;
 
       Utility.updateStorage('vol', gain);
 
@@ -907,7 +929,7 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'getVolume',
     value: function getVolume() {
-      return this.getAudio().Gain.gain.value;
+      return Utility.audio.Gain.gain.value;
     }
 
     /**
@@ -926,9 +948,11 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'setEq',
     value: function setEq(bands) {
+      var audio = Utility.audio;
+
       for (var i in bands) {
-        if (bands.hasOwnProperty(i) && this.getAudio().filters[i]) {
-          this.getAudio().filters[i].gain.value = bands[i];
+        if (bands.hasOwnProperty(i) && audio.filters[i]) {
+          audio.filters[i].gain.value = bands[i];
         }
       }
 
@@ -949,7 +973,7 @@ var WebAudioPlayer = function (_EventTarget2) {
     value: function getEq() {
       var bands = [];
 
-      this.getAudio().filters.forEach(function (filter) {
+      Utility.audio.filters.forEach(function (filter) {
         bands.push(filter.gain.value);
       });
 
