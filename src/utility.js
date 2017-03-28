@@ -8,6 +8,15 @@
 let _audio;
 
 /**
+ * Contains promises about loading URLs.
+ *
+ * Object keys are URLs, and values are Promise objects.
+ *
+ * @type {object}
+ */
+const _urlPromises = {};
+
+/**
  * Contains various utility methods.
  */
 class Utility {
@@ -63,8 +72,8 @@ class Utility {
    */
   static getUrlPromise(urls) {
     for (let i in urls) {
-      if (urls.hasOwnProperty(i) && Utility.urlPromises[urls[i]]) {
-        return Utility.urlPromises[urls[i]];
+      if (urls.hasOwnProperty(i) && _urlPromises[urls[i]]) {
+        return _urlPromises[urls[i]];
       }
     }
   }
@@ -77,7 +86,7 @@ class Utility {
    */
   static removeUrlPromise(urls) {
     urls.forEach(function (url) {
-      delete Utility.urlPromises[url];
+      delete _urlPromises[url];
     });
   }
 
@@ -91,7 +100,7 @@ class Utility {
    */
   static setUrlPromise(urls, promise) {
     urls.forEach(function (url) {
-      Utility.urlPromises[url] = promise;
+      _urlPromises[url] = promise;
     });
   }
 
@@ -140,12 +149,3 @@ class Utility {
   }
 
 }
-
-/**
- * Contains promises about loading URLs.
- *
- * Object keys are URLs, and values are Promise objects.
- *
- * @type {object}
- */
-Utility.urlPromises = {};

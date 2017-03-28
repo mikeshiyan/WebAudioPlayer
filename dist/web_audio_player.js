@@ -26,6 +26,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _audio = void 0;
 
 /**
+ * Contains promises about loading URLs.
+ *
+ * Object keys are URLs, and values are Promise objects.
+ *
+ * @type {object}
+ */
+var _urlPromises = {};
+
+/**
  * Contains various utility methods.
  */
 
@@ -91,8 +100,8 @@ var Utility = function () {
     key: 'getUrlPromise',
     value: function getUrlPromise(urls) {
       for (var i in urls) {
-        if (urls.hasOwnProperty(i) && Utility.urlPromises[urls[i]]) {
-          return Utility.urlPromises[urls[i]];
+        if (urls.hasOwnProperty(i) && _urlPromises[urls[i]]) {
+          return _urlPromises[urls[i]];
         }
       }
     }
@@ -108,7 +117,7 @@ var Utility = function () {
     key: 'removeUrlPromise',
     value: function removeUrlPromise(urls) {
       urls.forEach(function (url) {
-        delete Utility.urlPromises[url];
+        delete _urlPromises[url];
       });
     }
 
@@ -125,7 +134,7 @@ var Utility = function () {
     key: 'setUrlPromise',
     value: function setUrlPromise(urls, promise) {
       urls.forEach(function (url) {
-        Utility.urlPromises[url] = promise;
+        _urlPromises[url] = promise;
       });
     }
 
@@ -185,17 +194,6 @@ var Utility = function () {
 
   return Utility;
 }();
-
-/**
- * Contains promises about loading URLs.
- *
- * Object keys are URLs, and values are Promise objects.
- *
- * @type {object}
- */
-
-
-Utility.urlPromises = {};
 
 'use strict';
 
