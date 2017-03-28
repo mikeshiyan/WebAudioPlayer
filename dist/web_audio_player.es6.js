@@ -44,12 +44,12 @@ class Utility {
    *   - {Error} The Error object.
    */
   static getArrayBuffer(url) {
-    return new Promise(function (ok, fail) {
+    return new Promise((ok, fail) => {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'arraybuffer';
 
-      xhr.onload = function () {
+      xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 206) {
           ok(xhr.response);
         }
@@ -58,7 +58,7 @@ class Utility {
         }
       };
 
-      xhr.onerror = function () {
+      xhr.onerror = () => {
         fail(new Error('Unknown error.'));
       };
 
@@ -83,18 +83,17 @@ class Utility {
     let promise = Utility.getUrlPromise(urls);
 
     if (!promise) {
-      promise = urls.reduce(function (sequence, url) {
-        return sequence.catch(function () {
-          return Utility.getArrayBuffer(url).then(function (data) {
-            return Utility.audio.OfflineContext.decodeAudioData(data);
-          });
-        });
-      }, Promise.reject())
-        .then(function (buffer) {
+      const callback = (sequence, url) =>
+        sequence.catch(() =>
+          Utility.getArrayBuffer(url).then(data =>
+            Utility.audio.OfflineContext.decodeAudioData(data)));
+
+      promise = urls.reduce(callback, Promise.reject())
+        .then(buffer => {
           Utility.removeUrlPromise(urls);
           return buffer;
         })
-        .catch(function () {
+        .catch(() => {
           throw new Error('No valid audio URLs provided.');
         });
 
@@ -132,7 +131,7 @@ class Utility {
    *   An array of mirror URLs.
    */
   static removeUrlPromise(urls) {
-    urls.forEach(function (url) {
+    urls.forEach(url => {
       delete _urlPromises[url];
     });
   }
@@ -146,7 +145,7 @@ class Utility {
    *   The Promise object.
    */
   static setUrlPromise(urls, promise) {
-    urls.forEach(function (url) {
+    urls.forEach(url => {
       _urlPromises[url] = promise;
     });
   }
@@ -514,10 +513,10 @@ class Track extends EventTarget {
     /**
      * Fires marker callbacks if corresponding marker is reached.
      */
-    const fireMarkers = function () {
+    const fireMarkers = () => {
       for (let i in markersToFire) {
         if (markersToFire[i].m <= playedTime) {
-          setTimeout(markersToFire[i].fn.bind(track), 0);
+          setTimeout(markersToFire[i].fn.bind(this), 0);
 
           // One thing at a time. Remove the marker and break the loop.
           markersToFire.splice(i, 1);
@@ -532,12 +531,12 @@ class Track extends EventTarget {
      * @listens WebAudioPlayer#event:audioprocess
      * @fires Track#playing
      */
-    const audioprocess = function () {
+    const audioprocess = () => {
       if (isPlaying) {
         // Played time is only being increased while playing. When not playing
         // it remains with the same value, not minding of actual value of
         // the 'skipped' var.
-        playedTime = track.getCurrentTime() - skipped;
+        playedTime = this.getCurrentTime() - skipped;
 
         fireMarkers();
 
@@ -546,7 +545,7 @@ class Track extends EventTarget {
          *
          * @event Track#playing
          */
-        track.dispatchEvent('playing');
+        this.dispatchEvent('playing');
       }
     };
 
@@ -780,18 +779,11 @@ class WebAudioPlayer extends EventTarget {
     super();
 
     /**
-     * Contains this WebAudioPlayer object.
-     *
-     * @type {WebAudioPlayer}
-     */
-    let player = this;
-
-    /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
-    Utility.audio.ScriptProcessor.onaudioprocess = function () {
+    Utility.audio.ScriptProcessor.onaudioprocess = () => {
 
       /**
        * Indicates that audio is processing.
@@ -805,7 +797,7 @@ class WebAudioPlayer extends EventTarget {
        *
        * @see {@link Track#event:playing}
        */
-      player.dispatchEvent('audioprocess');
+      this.dispatchEvent('audioprocess');
     };
 
     const eq = Utility.readStorage('eq');
@@ -851,11 +843,7 @@ class WebAudioPlayer extends EventTarget {
    *   - {Error} The Error object.
    */
   loadUrl(urls) {
-    let player = this;
-
-    return Utility.loadUrl(urls).then(function (buffer) {
-      return new Track(buffer, player);
-    });
+    return Utility.loadUrl(urls).then(buffer => new Track(buffer, this));
   }
 
   /**
@@ -918,13 +906,7 @@ class WebAudioPlayer extends EventTarget {
    *   Array of 10 numbers.
    */
   getEq() {
-    let bands = [];
-
-    Utility.audio.filters.forEach(function (filter) {
-      bands.push(filter.gain.value);
-    });
-
-    return bands;
+    return Utility.audio.filters.map(filter => filter.gain.value);
   }
 
 }

@@ -15,18 +15,11 @@ class WebAudioPlayer extends EventTarget {
     super();
 
     /**
-     * Contains this WebAudioPlayer object.
-     *
-     * @type {WebAudioPlayer}
-     */
-    let player = this;
-
-    /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
-    Utility.audio.ScriptProcessor.onaudioprocess = function () {
+    Utility.audio.ScriptProcessor.onaudioprocess = () => {
 
       /**
        * Indicates that audio is processing.
@@ -40,7 +33,7 @@ class WebAudioPlayer extends EventTarget {
        *
        * @see {@link Track#event:playing}
        */
-      player.dispatchEvent('audioprocess');
+      this.dispatchEvent('audioprocess');
     };
 
     const eq = Utility.readStorage('eq');
@@ -86,11 +79,7 @@ class WebAudioPlayer extends EventTarget {
    *   - {Error} The Error object.
    */
   loadUrl(urls) {
-    let player = this;
-
-    return Utility.loadUrl(urls).then(function (buffer) {
-      return new Track(buffer, player);
-    });
+    return Utility.loadUrl(urls).then(buffer => new Track(buffer, this));
   }
 
   /**
@@ -153,13 +142,7 @@ class WebAudioPlayer extends EventTarget {
    *   Array of 10 numbers.
    */
   getEq() {
-    let bands = [];
-
-    Utility.audio.filters.forEach(function (filter) {
-      bands.push(filter.gain.value);
-    });
-
-    return bands;
+    return Utility.audio.filters.map(filter => filter.gain.value);
   }
 
 }

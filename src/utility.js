@@ -35,12 +35,12 @@ class Utility {
    *   - {Error} The Error object.
    */
   static getArrayBuffer(url) {
-    return new Promise(function (ok, fail) {
+    return new Promise((ok, fail) => {
       let xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'arraybuffer';
 
-      xhr.onload = function () {
+      xhr.onload = () => {
         if (xhr.status === 200 || xhr.status === 206) {
           ok(xhr.response);
         }
@@ -49,7 +49,7 @@ class Utility {
         }
       };
 
-      xhr.onerror = function () {
+      xhr.onerror = () => {
         fail(new Error('Unknown error.'));
       };
 
@@ -74,18 +74,17 @@ class Utility {
     let promise = Utility.getUrlPromise(urls);
 
     if (!promise) {
-      promise = urls.reduce(function (sequence, url) {
-        return sequence.catch(function () {
-          return Utility.getArrayBuffer(url).then(function (data) {
-            return Utility.audio.OfflineContext.decodeAudioData(data);
-          });
-        });
-      }, Promise.reject())
-        .then(function (buffer) {
+      const callback = (sequence, url) =>
+        sequence.catch(() =>
+          Utility.getArrayBuffer(url).then(data =>
+            Utility.audio.OfflineContext.decodeAudioData(data)));
+
+      promise = urls.reduce(callback, Promise.reject())
+        .then(buffer => {
           Utility.removeUrlPromise(urls);
           return buffer;
         })
-        .catch(function () {
+        .catch(() => {
           throw new Error('No valid audio URLs provided.');
         });
 
@@ -123,7 +122,7 @@ class Utility {
    *   An array of mirror URLs.
    */
   static removeUrlPromise(urls) {
-    urls.forEach(function (url) {
+    urls.forEach(url => {
       delete _urlPromises[url];
     });
   }
@@ -137,7 +136,7 @@ class Utility {
    *   The Promise object.
    */
   static setUrlPromise(urls, promise) {
-    urls.forEach(function (url) {
+    urls.forEach(url => {
       _urlPromises[url] = promise;
     });
   }

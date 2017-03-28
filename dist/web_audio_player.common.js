@@ -100,13 +100,15 @@ var Utility = function () {
       var promise = Utility.getUrlPromise(urls);
 
       if (!promise) {
-        promise = urls.reduce(function (sequence, url) {
+        var callback = function callback(sequence, url) {
           return sequence.catch(function () {
             return Utility.getArrayBuffer(url).then(function (data) {
               return Utility.audio.OfflineContext.decodeAudioData(data);
             });
           });
-        }, Promise.reject()).then(function (buffer) {
+        };
+
+        promise = urls.reduce(callback, Promise.reject()).then(function (buffer) {
           Utility.removeUrlPromise(urls);
           return buffer;
         }).catch(function () {
@@ -564,7 +566,7 @@ var Track = function (_EventTarget) {
     var fireMarkers = function fireMarkers() {
       for (var i in markersToFire) {
         if (markersToFire[i].m <= playedTime) {
-          setTimeout(markersToFire[i].fn.bind(track), 0);
+          setTimeout(markersToFire[i].fn.bind(_this), 0);
 
           // One thing at a time. Remove the marker and break the loop.
           markersToFire.splice(i, 1);
@@ -584,7 +586,7 @@ var Track = function (_EventTarget) {
         // Played time is only being increased while playing. When not playing
         // it remains with the same value, not minding of actual value of
         // the 'skipped' var.
-        playedTime = track.getCurrentTime() - skipped;
+        playedTime = _this.getCurrentTime() - skipped;
 
         fireMarkers();
 
@@ -593,7 +595,7 @@ var Track = function (_EventTarget) {
          *
          * @event Track#playing
          */
-        track.dispatchEvent('playing');
+        _this.dispatchEvent('playing');
       }
     };
 
@@ -830,19 +832,12 @@ var WebAudioPlayer = function (_EventTarget2) {
     _classCallCheck(this, WebAudioPlayer);
 
     /**
-     * Contains this WebAudioPlayer object.
-     *
-     * @type {WebAudioPlayer}
-     */
-    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
-
-    var player = _this2;
-
-    /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
+    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
+
     Utility.audio.ScriptProcessor.onaudioprocess = function () {
 
       /**
@@ -857,7 +852,7 @@ var WebAudioPlayer = function (_EventTarget2) {
        *
        * @see {@link Track#event:playing}
        */
-      player.dispatchEvent('audioprocess');
+      _this2.dispatchEvent('audioprocess');
     };
 
     var eq = Utility.readStorage('eq');
@@ -911,10 +906,10 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'loadUrl',
     value: function loadUrl(urls) {
-      var player = this;
+      var _this3 = this;
 
       return Utility.loadUrl(urls).then(function (buffer) {
-        return new Track(buffer, player);
+        return new Track(buffer, _this3);
       });
     }
 
@@ -990,13 +985,9 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'getEq',
     value: function getEq() {
-      var bands = [];
-
-      Utility.audio.filters.forEach(function (filter) {
-        bands.push(filter.gain.value);
+      return Utility.audio.filters.map(function (filter) {
+        return filter.gain.value;
       });
-
-      return bands;
     }
   }]);
 
