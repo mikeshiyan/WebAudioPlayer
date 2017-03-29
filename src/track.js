@@ -22,10 +22,8 @@ class Track extends EventTarget {
    *
    * @param {AudioBuffer} buffer
    *   The AudioBuffer object containing raw audio data.
-   * @param {WebAudioPlayer} player
-   *   The WebAudioPlayer object.
    */
-  constructor(buffer, player) {
+  constructor(buffer) {
     super();
 
     /**
@@ -163,6 +161,7 @@ class Track extends EventTarget {
     this.play = function () {
       if (!isPlaying && offset < buffer.duration) {
         const audio = Utility.audio;
+        const player = Utility.player;
         isPlaying = true;
         offset = Math.max(offset, 0);
         let duration = Math.max(buffer.duration - offset, 0);
@@ -228,7 +227,7 @@ class Track extends EventTarget {
       }
 
       skipped = offset = 0;
-      player.removeEventListener('audioprocess', audioprocess);
+      Utility.player.removeEventListener('audioprocess', audioprocess);
       markersToFire = markers.slice(0);
 
       return this;
@@ -252,7 +251,7 @@ class Track extends EventTarget {
         offset += Utility.audio.Context.currentTime - playStartedAt;
       }
 
-      player.removeEventListener('audioprocess', audioprocess);
+      Utility.player.removeEventListener('audioprocess', audioprocess);
 
       return this;
     };

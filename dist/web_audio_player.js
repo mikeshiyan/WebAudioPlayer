@@ -26,6 +26,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _audio = void 0;
 
 /**
+ * The WebAudioPlayer instance.
+ *
+ * @type {WebAudioPlayer}
+ */
+var _player = void 0;
+
+/**
  * Contains promises about loading URLs.
  *
  * Object keys are URLs, and values are Promise objects.
@@ -230,6 +237,37 @@ var Utility = function () {
       }
 
       return _audio;
+    }
+
+    /**
+     * Saves the WebAudioPlayer instance to a statically cached variable.
+     *
+     * @param {WebAudioPlayer} player
+     *   The WebAudioPlayer instance.
+     *
+     * @throws {TypeError}
+     *   If provided parameter is not a WebAudioPlayer instance.
+     */
+
+  }, {
+    key: 'player',
+    set: function set(player) {
+      if (player instanceof WebAudioPlayer) {
+        _player = player;
+      } else {
+        throw new TypeError('Player parameter accepts the WebAudioPlayer instance only.');
+      }
+    }
+
+    /**
+     * Returns the WebAudioPlayer instance.
+     *
+     * @return {WebAudioPlayer}
+     *   The WebAudioPlayer instance.
+     */
+    ,
+    get: function get() {
+      return _player;
     }
   }]);
 
@@ -467,10 +505,8 @@ var Track = function (_EventTarget) {
    *
    * @param {AudioBuffer} buffer
    *   The AudioBuffer object containing raw audio data.
-   * @param {WebAudioPlayer} player
-   *   The WebAudioPlayer object.
    */
-  function Track(buffer, player) {
+  function Track(buffer) {
     _classCallCheck(this, Track);
 
     /**
@@ -610,6 +646,7 @@ var Track = function (_EventTarget) {
     _this.play = function () {
       if (!isPlaying && offset < buffer.duration) {
         var audio = Utility.audio;
+        var player = Utility.player;
         isPlaying = true;
         offset = Math.max(offset, 0);
         var duration = Math.max(buffer.duration - offset, 0);
@@ -675,7 +712,7 @@ var Track = function (_EventTarget) {
       }
 
       skipped = offset = 0;
-      player.removeEventListener('audioprocess', audioprocess);
+      Utility.player.removeEventListener('audioprocess', audioprocess);
       markersToFire = markers.slice(0);
 
       return this;
@@ -699,7 +736,7 @@ var Track = function (_EventTarget) {
         offset += Utility.audio.Context.currentTime - playStartedAt;
       }
 
-      player.removeEventListener('audioprocess', audioprocess);
+      Utility.player.removeEventListener('audioprocess', audioprocess);
 
       return this;
     };
@@ -833,13 +870,15 @@ var WebAudioPlayer = function (_EventTarget2) {
   function WebAudioPlayer() {
     _classCallCheck(this, WebAudioPlayer);
 
+    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
+
+    Utility.player = _this2;
+
     /**
      * Runs code while audio is processing.
      *
      * @fires WebAudioPlayer#audioprocess
      */
-    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
-
     Utility.audio.ScriptProcessor.onaudioprocess = function () {
 
       /**
@@ -908,10 +947,8 @@ var WebAudioPlayer = function (_EventTarget2) {
   }, {
     key: 'loadUrl',
     value: function loadUrl(urls) {
-      var _this3 = this;
-
       return Utility.loadUrl(urls).then(function (buffer) {
-        return new Track(buffer, _this3);
+        return new Track(buffer);
       });
     }
 

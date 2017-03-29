@@ -8,6 +8,13 @@
 let _audio;
 
 /**
+ * The WebAudioPlayer instance.
+ *
+ * @type {WebAudioPlayer}
+ */
+let _player;
+
+/**
  * Contains promises about loading URLs.
  *
  * Object keys are URLs, and values are Promise objects.
@@ -183,6 +190,34 @@ class Utility {
     }
 
     return _audio;
+  }
+
+  /**
+   * Saves the WebAudioPlayer instance to a statically cached variable.
+   *
+   * @param {WebAudioPlayer} player
+   *   The WebAudioPlayer instance.
+   *
+   * @throws {TypeError}
+   *   If provided parameter is not a WebAudioPlayer instance.
+   */
+  static set player(player) {
+    if (player instanceof WebAudioPlayer) {
+      _player = player;
+    }
+    else {
+      throw new TypeError('Player parameter accepts the WebAudioPlayer instance only.');
+    }
+  }
+
+  /**
+   * Returns the WebAudioPlayer instance.
+   *
+   * @return {WebAudioPlayer}
+   *   The WebAudioPlayer instance.
+   */
+  static get player() {
+    return _player;
   }
 
 }

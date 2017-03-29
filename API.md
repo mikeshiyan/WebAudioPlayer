@@ -41,6 +41,8 @@ Contains various utility methods.
 
 * [Utility](#Utility)
     * [.audio](#Utility.audio) ⇒ <code>[Audio](#Audio)</code>
+    * [.player](#Utility.player)
+    * [.player](#Utility.player) ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
     * [.getArrayBuffer(url)](#Utility.getArrayBuffer) ⇒ <code>Promise.&lt;ArrayBuffer, Error&gt;</code>
     * [.loadUrl(urls)](#Utility.loadUrl) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code>
     * [.getUrlPromise(urls)](#Utility.getUrlPromise) ⇒ <code>Promise.&lt;AudioBuffer, Error&gt;</code> &#124; <code>undefined</code>
@@ -56,6 +58,28 @@ Returns the Audio object.
 
 **Kind**: static property of <code>[Utility](#Utility)</code>  
 **Returns**: <code>[Audio](#Audio)</code> - The Audio object.  
+<a name="Utility.player"></a>
+
+### Utility.player
+Saves the WebAudioPlayer instance to a statically cached variable.
+
+**Kind**: static property of <code>[Utility](#Utility)</code>  
+**Throws**:
+
+- <code>TypeError</code> If provided parameter is not a WebAudioPlayer instance.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| player | <code>[WebAudioPlayer](#WebAudioPlayer)</code> | The WebAudioPlayer instance. |
+
+<a name="Utility.player"></a>
+
+### Utility.player ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
+Returns the WebAudioPlayer instance.
+
+**Kind**: static property of <code>[Utility](#Utility)</code>  
+**Returns**: <code>[WebAudioPlayer](#WebAudioPlayer)</code> - The WebAudioPlayer instance.  
 <a name="Utility.getArrayBuffer"></a>
 
 ### Utility.getArrayBuffer(url) ⇒ <code>Promise.&lt;ArrayBuffer, Error&gt;</code>
@@ -283,7 +307,7 @@ Provides audiotrack-specific methods.
 **Extends:** <code>[EventTarget](#EventTarget)</code>  
 
 * [Track](#Track) ⇐ <code>[EventTarget](#EventTarget)</code>
-    * [new Track(buffer, player)](#new_Track_new)
+    * [new Track(buffer)](#new_Track_new)
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
     * [.play()](#Track+play) ⇒ <code>[Track](#Track)</code>
     * [.stop()](#Track+stop) ⇒ <code>[Track](#Track)</code>
@@ -302,14 +326,13 @@ Provides audiotrack-specific methods.
 
 <a name="new_Track_new"></a>
 
-### new Track(buffer, player)
+### new Track(buffer)
 Constructs a Track object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | buffer | <code>AudioBuffer</code> | The AudioBuffer object containing raw audio data. |
-| player | <code>[WebAudioPlayer](#WebAudioPlayer)</code> | The WebAudioPlayer object. |
 
 <a name="EventTarget+eventListeners"></a>
 

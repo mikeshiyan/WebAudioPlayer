@@ -14,6 +14,8 @@ class WebAudioPlayer extends EventTarget {
   constructor() {
     super();
 
+    Utility.player = this;
+
     /**
      * Runs code while audio is processing.
      *
@@ -79,7 +81,7 @@ class WebAudioPlayer extends EventTarget {
    *   - {Error} The Error object.
    */
   loadUrl(urls) {
-    return Utility.loadUrl(urls).then(buffer => new Track(buffer, this));
+    return Utility.loadUrl(urls).then(buffer => new Track(buffer));
   }
 
   /**
