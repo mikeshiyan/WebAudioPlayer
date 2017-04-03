@@ -60,28 +60,17 @@ class WebAudioPlayer extends EventTarget {
   }
 
   /**
-   * Loads the audio file into the Track object.
-   *
-   * This method takes an array of URLs (presumably pointing to the same audio
-   * file) as the only argument, and will stop and fulfill the promise after
-   * the first valid audio URL found.
-   *
-   * Multiple simultaneous calls to this method providing the same (or
-   * intersecting) URL sets will receive the same Promise object, which when
-   * fulfilled will return the same Track object for all callers.
+   * Returns the new Track instance.
    *
    * @param {string[]} urls
-   *   An array of mirror URLs.
+   *   Track sources - an array of mirror URLs pointing to the same audio piece.
+   *   Only the first valid URL will be ultimately used.
    *
-   * @return {Promise.<Track, Error>}
-   *   The Promise object.
-   *   Fulfill callback arguments:
-   *   - {Track} The Track object.
-   *   Reject callback arguments:
-   *   - {Error} The Error object.
+   * @return {Track}
+   *   The Track instance.
    */
-  loadUrl(urls) {
-    return Utility.loadUrl(urls).then(buffer => new Track(buffer));
+  createTrack(urls) {
+    return new Track(urls);
   }
 
   /**

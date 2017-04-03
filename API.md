@@ -307,8 +307,9 @@ Provides audiotrack-specific methods.
 **Extends:** <code>[EventTarget](#EventTarget)</code>  
 
 * [Track](#Track) ⇐ <code>[EventTarget](#EventTarget)</code>
-    * [new Track(buffer)](#new_Track_new)
+    * [new Track(urls)](#new_Track_new)
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
+    * [.load()](#Track+load) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
     * [.play()](#Track+play) ⇒ <code>[Track](#Track)</code>
     * [.stop()](#Track+stop) ⇒ <code>[Track](#Track)</code>
     * [.pause()](#Track+pause) ⇒ <code>[Track](#Track)</code>
@@ -326,13 +327,13 @@ Provides audiotrack-specific methods.
 
 <a name="new_Track_new"></a>
 
-### new Track(buffer)
+### new Track(urls)
 Constructs a Track object.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| buffer | <code>AudioBuffer</code> | The AudioBuffer object containing raw audio data. |
+| urls | <code>Array.&lt;string&gt;</code> | Track sources - an array of mirror URLs pointing to the same audio piece. |
 
 <a name="EventTarget+eventListeners"></a>
 
@@ -342,6 +343,19 @@ Contains event listeners.
 Object keys are event types, and values are arrays of callbacks.
 
 **Kind**: instance property of <code>[Track](#Track)</code>  
+<a name="Track+load"></a>
+
+### track.load() ⇒ <code>Promise.&lt;Track, Error&gt;</code>
+Loads the audio file into buffer.
+
+Multiple calls to this method get the same Promise object.
+
+**Kind**: instance method of <code>[Track](#Track)</code>  
+**Returns**: <code>Promise.&lt;Track, Error&gt;</code> - The Promise object.
+  Fulfill callback arguments:
+  - {Track} This Track instance, loaded.
+  Reject callback arguments:
+  - {Error} The Error object.  
 <a name="Track+play"></a>
 
 ### track.play() ⇒ <code>[Track](#Track)</code>
@@ -349,6 +363,10 @@ Plays the loaded audio file or resumes the playback from pause.
 
 **Kind**: instance method of <code>[Track](#Track)</code>  
 **Returns**: <code>[Track](#Track)</code> - The Track object.  
+**Throws**:
+
+- <code>Error</code> If track is not loaded.
+
 <a name="Track+stop"></a>
 
 ### track.stop() ⇒ <code>[Track](#Track)</code>
@@ -425,6 +443,10 @@ Gets the duration of a track.
 
 **Kind**: instance method of <code>[Track](#Track)</code>  
 **Returns**: <code>number</code> - The duration in seconds.  
+**Throws**:
+
+- <code>Error</code> If track is not loaded.
+
 <a name="Track+isPlaying"></a>
 
 ### track.isPlaying() ⇒ <code>boolean</code>
@@ -492,7 +514,7 @@ The main, public class, providing general methods.
     * [new WebAudioPlayer()](#new_WebAudioPlayer_new)
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
     * [.getAudio()](#WebAudioPlayer+getAudio) ⇒ <code>[Audio](#Audio)</code>
-    * [.loadUrl(urls)](#WebAudioPlayer+loadUrl) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
+    * [.createTrack(urls)](#WebAudioPlayer+createTrack) ⇒ <code>[Track](#Track)</code>
     * [.setVolume(gain)](#WebAudioPlayer+setVolume) ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
     * [.getVolume()](#WebAudioPlayer+getVolume) ⇒ <code>number</code>
     * [.setEq(bands)](#WebAudioPlayer+setEq) ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
@@ -522,29 +544,17 @@ Returns the Audio object.
 
 **Kind**: instance method of <code>[WebAudioPlayer](#WebAudioPlayer)</code>  
 **Returns**: <code>[Audio](#Audio)</code> - The Audio object.  
-<a name="WebAudioPlayer+loadUrl"></a>
+<a name="WebAudioPlayer+createTrack"></a>
 
-### webAudioPlayer.loadUrl(urls) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
-Loads the audio file into the Track object.
-
-This method takes an array of URLs (presumably pointing to the same audio
-file) as the only argument, and will stop and fulfill the promise after
-the first valid audio URL found.
-
-Multiple simultaneous calls to this method providing the same (or
-intersecting) URL sets will receive the same Promise object, which when
-fulfilled will return the same Track object for all callers.
+### webAudioPlayer.createTrack(urls) ⇒ <code>[Track](#Track)</code>
+Returns the new Track instance.
 
 **Kind**: instance method of <code>[WebAudioPlayer](#WebAudioPlayer)</code>  
-**Returns**: <code>Promise.&lt;Track, Error&gt;</code> - The Promise object.
-  Fulfill callback arguments:
-  - {Track} The Track object.
-  Reject callback arguments:
-  - {Error} The Error object.  
+**Returns**: <code>[Track](#Track)</code> - The Track instance.  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| urls | <code>Array.&lt;string&gt;</code> | An array of mirror URLs. |
+| urls | <code>Array.&lt;string&gt;</code> | Track sources - an array of mirror URLs pointing to the same audio piece.   Only the first valid URL will be ultimately used. |
 
 <a name="WebAudioPlayer+setVolume"></a>
 
