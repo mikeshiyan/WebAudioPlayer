@@ -66,10 +66,6 @@ class WebAudioPlayer extends EventTarget {
    * file) as the only argument, and will stop and fulfill the promise after
    * the first valid audio URL found.
    *
-   * Multiple simultaneous calls to this method providing the same (or
-   * intersecting) URL sets will receive the same Promise object, which when
-   * fulfilled will return the same Track object for all callers.
-   *
    * @param {string[]} urls
    *   An array of mirror URLs.
    *

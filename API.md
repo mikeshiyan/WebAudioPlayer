@@ -531,10 +531,6 @@ This method takes an array of URLs (presumably pointing to the same audio
 file) as the only argument, and will stop and fulfill the promise after
 the first valid audio URL found.
 
-Multiple simultaneous calls to this method providing the same (or
-intersecting) URL sets will receive the same Promise object, which when
-fulfilled will return the same Track object for all callers.
-
 **Kind**: instance method of <code>[WebAudioPlayer](#WebAudioPlayer)</code>  
 **Returns**: <code>Promise.&lt;Track, Error&gt;</code> - The Promise object.
   Fulfill callback arguments:
