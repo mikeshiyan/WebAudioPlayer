@@ -503,19 +503,26 @@ var Track = function (_EventTarget) {
   /**
    * Constructs a Track object.
    *
-   * @param {AudioBuffer} buffer
-   *   The AudioBuffer object containing raw audio data.
+   * @param {string[]} urls
+   *   Track sources - an array of mirror URLs pointing to the same audio piece.
    */
-  function Track(buffer) {
+  function Track(urls) {
     _classCallCheck(this, Track);
+
+    /**
+     * The AudioBuffer object containing raw audio data.
+     *
+     * @type {AudioBuffer}
+     */
+    var _this = _possibleConstructorReturn(this, (Track.__proto__ || Object.getPrototypeOf(Track)).call(this));
+
+    var buffer = null;
 
     /**
      * Indicates whether an audio is currently playing.
      *
      * @type {boolean}
      */
-    var _this = _possibleConstructorReturn(this, (Track.__proto__ || Object.getPrototypeOf(Track)).call(this));
-
     var isPlaying = false;
 
     /**
@@ -573,6 +580,13 @@ var Track = function (_EventTarget) {
      * @type {number}
      */
     var playStartedAt = 0;
+
+    /**
+     * The promise of a loaded track.
+     *
+     * @type {Promise}
+     */
+    var promise = null;
 
     /**
      * Contains the total time skipped when changing playback positions.
@@ -638,12 +652,44 @@ var Track = function (_EventTarget) {
     };
 
     /**
+     * Loads the audio file into buffer.
+     *
+     * Multiple calls to this method get the same Promise object.
+     *
+     * @return {Promise.<Track, Error>}
+     *   The Promise object.
+     *   Fulfill callback arguments:
+     *   - {Track} This Track instance, loaded.
+     *   Reject callback arguments:
+     *   - {Error} The Error object.
+     */
+    _this.load = function () {
+      var _this2 = this;
+
+      if (!promise) {
+        promise = Utility.loadUrl(urls).then(function (newBuffer) {
+          buffer = newBuffer;
+          return _this2;
+        });
+      }
+
+      return promise;
+    };
+
+    /**
      * Plays the loaded audio file or resumes the playback from pause.
      *
      * @return {Track}
      *   The Track object.
+     *
+     * @throws {Error}
+     *   If track is not loaded.
      */
     _this.play = function () {
+      if (!buffer) {
+        throw new Error('Track is not loaded.');
+      }
+
       if (!isPlaying && offset < buffer.duration) {
         var audio = Utility.audio;
         var player = Utility.player;
@@ -832,8 +878,15 @@ var Track = function (_EventTarget) {
      *
      * @return {number}
      *   The duration in seconds.
+     *
+     * @throws {Error}
+     *   If track is not loaded.
      */
     _this.getDuration = function () {
+      if (!buffer) {
+        throw new Error('Track is not loaded.');
+      }
+
       return buffer.duration;
     };
 
@@ -870,9 +923,9 @@ var WebAudioPlayer = function (_EventTarget2) {
   function WebAudioPlayer() {
     _classCallCheck(this, WebAudioPlayer);
 
-    var _this2 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
+    var _this3 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
 
-    Utility.player = _this2;
+    Utility.player = _this3;
 
     /**
      * Runs code while audio is processing.
@@ -893,19 +946,19 @@ var WebAudioPlayer = function (_EventTarget2) {
        *
        * @see {@link Track#event:playing}
        */
-      _this2.dispatchEvent('audioprocess');
+      _this3.dispatchEvent('audioprocess');
     };
 
     var eq = Utility.readStorage('eq');
     var vol = Utility.readStorage('vol');
 
     if (eq) {
-      _this2.setEq(eq);
+      _this3.setEq(eq);
     }
     if (vol) {
-      _this2.setVolume(vol);
+      _this3.setVolume(vol);
     }
-    return _this2;
+    return _this3;
   }
 
   /**
@@ -923,29 +976,20 @@ var WebAudioPlayer = function (_EventTarget2) {
     }
 
     /**
-     * Loads the audio file into the Track object.
-     *
-     * This method takes an array of URLs (presumably pointing to the same audio
-     * file) as the only argument, and will stop and fulfill the promise after
-     * the first valid audio URL found.
+     * Returns the new Track instance.
      *
      * @param {string[]} urls
-     *   An array of mirror URLs.
+     *   Track sources - an array of mirror URLs pointing to the same audio piece.
+     *   Only the first valid URL will be ultimately used.
      *
-     * @return {Promise.<Track, Error>}
-     *   The Promise object.
-     *   Fulfill callback arguments:
-     *   - {Track} The Track object.
-     *   Reject callback arguments:
-     *   - {Error} The Error object.
+     * @return {Track}
+     *   The Track instance.
      */
 
   }, {
-    key: 'loadUrl',
-    value: function loadUrl(urls) {
-      return Utility.loadUrl(urls).then(function (buffer) {
-        return new Track(buffer);
-      });
+    key: 'createTrack',
+    value: function createTrack(urls) {
+      return new Track(urls);
     }
 
     /**
