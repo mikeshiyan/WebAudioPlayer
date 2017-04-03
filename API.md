@@ -308,6 +308,7 @@ Provides audiotrack-specific methods.
 
 * [Track](#Track) ⇐ <code>[EventTarget](#EventTarget)</code>
     * [new Track(urls)](#new_Track_new)
+    * [.data](#Track+data) : <code>object</code>
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
     * [.load()](#Track+load) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
     * [.play()](#Track+play) ⇒ <code>[Track](#Track)</code>
@@ -335,6 +336,14 @@ Constructs a Track object.
 | --- | --- | --- |
 | urls | <code>Array.&lt;string&gt;</code> | Track sources - an array of mirror URLs pointing to the same audio piece. |
 
+<a name="Track+data"></a>
+
+### track.data : <code>object</code>
+Provides a common place for any custom data associated with the track.
+
+For example, track title, artist, etc.
+
+**Kind**: instance property of <code>[Track](#Track)</code>  
 <a name="EventTarget+eventListeners"></a>
 
 ### track.eventListeners : <code>object</code>

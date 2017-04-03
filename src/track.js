@@ -27,6 +27,15 @@ class Track extends EventTarget {
     super();
 
     /**
+     * Provides a common place for any custom data associated with the track.
+     *
+     * For example, track title, artist, etc.
+     *
+     * @type {object}
+     */
+    this.data = {};
+
+    /**
      * The AudioBuffer object containing raw audio data.
      *
      * @type {AudioBuffer}

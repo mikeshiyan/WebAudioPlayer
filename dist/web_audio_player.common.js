@@ -508,12 +508,21 @@ var Track = function (_EventTarget) {
     _classCallCheck(this, Track);
 
     /**
+     * Provides a common place for any custom data associated with the track.
+     *
+     * For example, track title, artist, etc.
+     *
+     * @type {object}
+     */
+    var _this = _possibleConstructorReturn(this, (Track.__proto__ || Object.getPrototypeOf(Track)).call(this));
+
+    _this.data = {};
+
+    /**
      * The AudioBuffer object containing raw audio data.
      *
      * @type {AudioBuffer}
      */
-    var _this = _possibleConstructorReturn(this, (Track.__proto__ || Object.getPrototypeOf(Track)).call(this));
-
     var buffer = null;
 
     /**
