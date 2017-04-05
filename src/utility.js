@@ -183,6 +183,8 @@ class Utility {
    *
    * @return {Audio}
    *   The Audio object.
+   *
+   * @readonly
    */
   static get audio() {
     if (!_audio) {
