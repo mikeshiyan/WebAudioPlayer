@@ -325,6 +325,7 @@ Provides audiotrack-specific methods.
     * [.dispatchEvent(type, ...other_arguments)](#EventTarget+dispatchEvent)
     * ["playing"](#Track+event_playing)
     * ["finished"](#Track+event_finished)
+    * ["play"](#Track+event_play)
 
 <a name="new_Track_new"></a>
 
@@ -376,6 +377,7 @@ Plays the loaded audio file or resumes the playback from pause.
 
 - <code>Error</code> If track is not loaded.
 
+**Emits**: <code>[play](#Track+event_play)</code>  
 <a name="Track+stop"></a>
 
 ### track.stop() ⇒ <code>[Track](#Track)</code>
@@ -504,13 +506,28 @@ Dispatches an event.
 ### "playing"
 Indicates that the track is playing.
 
+Unlike the 'play' event, this one is fired constantly during
+the playback of the Track.
+
 **Kind**: event emitted by <code>[Track](#Track)</code>  
+**See**: [play](#Track+event_play)  
 <a name="Track+event_finished"></a>
 
 ### "finished"
 Indicates that the track has finished playing.
 
 **Kind**: event emitted by <code>[Track](#Track)</code>  
+<a name="Track+event_play"></a>
+
+### "play"
+Indicates the playback beginning.
+
+Unlike the 'playing' event, this one is fired only when the track
+source has started playing, but not necessary from the start of
+an audio track.
+
+**Kind**: event emitted by <code>[Track](#Track)</code>  
+**See**: [playing](#Track+event_playing)  
 <a name="WebAudioPlayer"></a>
 
 ## WebAudioPlayer ⇐ <code>[EventTarget](#EventTarget)</code>

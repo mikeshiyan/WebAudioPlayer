@@ -647,7 +647,12 @@ var Track = function (_EventTarget) {
         /**
          * Indicates that the track is playing.
          *
+         * Unlike the 'play' event, this one is fired constantly during
+         * the playback of the Track.
+         *
          * @event Track#playing
+         *
+         * @see {@link Track#event:play}
          */
         _this.dispatchEvent('playing');
       }
@@ -686,6 +691,7 @@ var Track = function (_EventTarget) {
      *
      * @throws {Error}
      *   If track is not loaded.
+     * @fires Track#play
      */
     _this.play = function () {
       if (!buffer) {
@@ -739,6 +745,19 @@ var Track = function (_EventTarget) {
 
         playStartedAt = audio.Context.currentTime;
         source.start(0, offset, duration);
+
+        /**
+         * Indicates the playback beginning.
+         *
+         * Unlike the 'playing' event, this one is fired only when the track
+         * source has started playing, but not necessary from the start of
+         * an audio track.
+         *
+         * @event Track#play
+         *
+         * @see {@link Track#event:playing}
+         */
+        this.dispatchEvent('play');
       }
 
       return this;
