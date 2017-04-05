@@ -74,6 +74,19 @@ class WebAudioPlayer extends EventTarget {
   }
 
   /**
+   * Returns the new Playlist instance.
+   *
+   * @param {Track[]} list
+   *   (optional) Array of Track instances.
+   *
+   * @return {Playlist}
+   *   The Playlist instance.
+   */
+  createPlaylist(list = []) {
+    return new Playlist(list);
+  }
+
+  /**
    * Sets the playback volume to new level.
    *
    * @param {number} gain

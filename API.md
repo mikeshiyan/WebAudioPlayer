@@ -14,6 +14,9 @@
 <dt><a href="#Track">Track</a> ⇐ <code><a href="#EventTarget">EventTarget</a></code></dt>
 <dd><p>Provides audiotrack-specific methods.</p>
 </dd>
+<dt><a href="#Playlist">Playlist</a> ⇐ <code><a href="#EventTarget">EventTarget</a></code></dt>
+<dd><p>Provides playlist-specific methods.</p>
+</dd>
 <dt><a href="#WebAudioPlayer">WebAudioPlayer</a> ⇐ <code><a href="#EventTarget">EventTarget</a></code></dt>
 <dd><p>The main, public class, providing general methods.</p>
 </dd>
@@ -58,6 +61,7 @@ Returns the Audio object.
 
 **Kind**: static property of <code>[Utility](#Utility)</code>  
 **Returns**: <code>[Audio](#Audio)</code> - The Audio object.  
+**Read only**: true  
 <a name="Utility.player"></a>
 
 ### Utility.player
@@ -528,6 +532,246 @@ an audio track.
 
 **Kind**: event emitted by <code>[Track](#Track)</code>  
 **See**: [playing](#Track+event_playing)  
+<a name="Playlist"></a>
+
+## Playlist ⇐ <code>[EventTarget](#EventTarget)</code>
+Provides playlist-specific methods.
+
+**Kind**: global class  
+**Extends:** <code>[EventTarget](#EventTarget)</code>  
+
+* [Playlist](#Playlist) ⇐ <code>[EventTarget](#EventTarget)</code>
+    * [new Playlist(list)](#new_Playlist_new)
+    * [.list](#Playlist+list) : <code>[Array.&lt;Track&gt;](#Track)</code>
+    * [.length](#Playlist+length) ⇒ <code>number</code>
+    * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
+    * [.setCurrentByIndex(index)](#Playlist+setCurrentByIndex) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.getCurrent()](#Playlist+getCurrent) ⇒ <code>[Track](#Track)</code> &#124; <code>null</code>
+    * [.getCurrentIndex()](#Playlist+getCurrentIndex) ⇒ <code>number</code>
+    * [.get(index)](#Playlist+get) ⇒ <code>[Track](#Track)</code> &#124; <code>null</code> &#124; <code>undefined</code>
+    * [.load(index)](#Playlist+load) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
+    * [.play(index)](#Playlist+play) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.pause()](#Playlist+pause) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.previous()](#Playlist+previous) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.next()](#Playlist+next) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.isPlaying()](#Playlist+isPlaying) ⇒ <code>boolean</code>
+    * [.push(...tracks)](#Playlist+push) ⇒ <code>[Playlist](#Playlist)</code>
+    * [.addEventListener(type, callback)](#EventTarget+addEventListener)
+    * [.removeEventListener(type, callback)](#EventTarget+removeEventListener)
+    * [.dispatchEvent(type, ...other_arguments)](#EventTarget+dispatchEvent)
+    * ["trackReady" (track)](#Playlist+event_trackReady)
+
+<a name="new_Playlist_new"></a>
+
+### new Playlist(list)
+Constructs a Playlist object.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| list | <code>[Array.&lt;Track&gt;](#Track)</code> | (optional) Array of Track instances. |
+
+<a name="Playlist+list"></a>
+
+### playlist.list : <code>[Array.&lt;Track&gt;](#Track)</code>
+List of tracks to play.
+
+**Kind**: instance property of <code>[Playlist](#Playlist)</code>  
+<a name="Playlist+length"></a>
+
+### playlist.length ⇒ <code>number</code>
+Returns the number of tracks in the list.
+
+**Kind**: instance property of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>number</code> - Number of tracks in the list.  
+**Read only**: true  
+<a name="EventTarget+eventListeners"></a>
+
+### playlist.eventListeners : <code>object</code>
+Contains event listeners.
+
+Object keys are event types, and values are arrays of callbacks.
+
+**Kind**: instance property of <code>[Playlist](#Playlist)</code>  
+<a name="Playlist+setCurrentByIndex"></a>
+
+### playlist.setCurrentByIndex(index) ⇒ <code>[Playlist](#Playlist)</code>
+Sets current track by its list index.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+**Throws**:
+
+- <code>Error</code> If current track is playing or if there's no track with given index in
+  the list.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| index | <code>number</code> | Index of a track in list. |
+
+<a name="Playlist+getCurrent"></a>
+
+### playlist.getCurrent() ⇒ <code>[Track](#Track)</code> &#124; <code>null</code>
+Returns the current track.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Track](#Track)</code> &#124; <code>null</code> - The current track, or null in case of empty list.  
+<a name="Playlist+getCurrentIndex"></a>
+
+### playlist.getCurrentIndex() ⇒ <code>number</code>
+Returns the list index of current track.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>number</code> - Current track's index, or -1 in case of empty list or if the current
+  track was removed from the list.  
+<a name="Playlist+get"></a>
+
+### playlist.get(index) ⇒ <code>[Track](#Track)</code> &#124; <code>null</code> &#124; <code>undefined</code>
+Returns the track by index or the current one.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Track](#Track)</code> &#124; <code>null</code> &#124; <code>undefined</code> - Either track corresponding to given index, or the current one. Null or
+  undefined, if there's no corresponding track in the list.  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| index | <code>number</code> &#124; <code>null</code> | <code></code> | (optional) The list index. If omitted, the current track will be   looked for. |
+
+<a name="Playlist+load"></a>
+
+### playlist.load(index) ⇒ <code>Promise.&lt;Track, Error&gt;</code>
+Loads the track by index or the current one.
+
+If track can't be loaded this method will try next tracks from the list
+recursively.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>Promise.&lt;Track, Error&gt;</code> - The Promise object.
+  Fulfill callback arguments:
+  - {Track} The Track instance, loaded.
+  Reject callback arguments:
+  - {Error} The Error object.  
+**Emits**: <code>[trackReady](#Playlist+event_trackReady)</code>  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| index | <code>number</code> &#124; <code>null</code> | <code></code> | (optional) The list index. If omitted, the current track will be loaded. |
+
+<a name="Playlist+play"></a>
+
+### playlist.play(index) ⇒ <code>[Playlist](#Playlist)</code>
+Plays the loaded track by index or the current one.
+
+If track is on pause this method will resume the playback from track's
+current position. If track is finished it will play from the start.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+**Throws**:
+
+- <code>Error</code> If there's no corresponding track in the list.
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| index | <code>number</code> &#124; <code>null</code> | <code></code> | (optional) The list index. If omitted, the current track will be played. |
+
+<a name="Playlist+pause"></a>
+
+### playlist.pause() ⇒ <code>[Playlist](#Playlist)</code>
+Pauses the playback of current track.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+<a name="Playlist+previous"></a>
+
+### playlist.previous() ⇒ <code>[Playlist](#Playlist)</code>
+Skips to the start of previous track in the list, if one exists.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+**Throws**:
+
+- <code>Error</code> If list is empty or if the current track was removed from the list.
+
+<a name="Playlist+next"></a>
+
+### playlist.next() ⇒ <code>[Playlist](#Playlist)</code>
+Skips to the start of next track in the list, if one exists.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+**Throws**:
+
+- <code>Error</code> If list is empty or if the current track was removed from the list.
+
+<a name="Playlist+isPlaying"></a>
+
+### playlist.isPlaying() ⇒ <code>boolean</code>
+Indicates whether a current track is currently playing.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>boolean</code> - True if audio is playing, false otherwise.  
+<a name="Playlist+push"></a>
+
+### playlist.push(...tracks) ⇒ <code>[Playlist](#Playlist)</code>
+Adds one or more tracks to the end of the list.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ...tracks | <code>[Track](#Track)</code> | Track instances to add. |
+
+<a name="EventTarget+addEventListener"></a>
+
+### playlist.addEventListener(type, callback)
+Registers an event handler of a specific type.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| type | <code>string</code> | Event type to listen for. |
+| callback | <code>[eventListener](#eventListener)</code> | Event handler to call when event occurs. |
+
+<a name="EventTarget+removeEventListener"></a>
+
+### playlist.removeEventListener(type, callback)
+Removes an event listener.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| type | <code>string</code> | Event type. |
+| callback | <code>[eventListener](#eventListener)</code> | Event handler to remove. |
+
+<a name="EventTarget+dispatchEvent"></a>
+
+### playlist.dispatchEvent(type, ...other_arguments)
+Dispatches an event.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| type | <code>string</code> | Event type to dispatch. |
+| ...other_arguments | <code>\*</code> | Other arguments to supply to event listeners. |
+
+<a name="Playlist+event_trackReady"></a>
+
+### "trackReady" (track)
+Indicates that the track from the list is loaded.
+
+**Kind**: event emitted by <code>[Playlist](#Playlist)</code>  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| track | <code>[Track](#Track)</code> | Instance of the loaded track. |
+
 <a name="WebAudioPlayer"></a>
 
 ## WebAudioPlayer ⇐ <code>[EventTarget](#EventTarget)</code>
@@ -541,6 +785,7 @@ The main, public class, providing general methods.
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
     * [.getAudio()](#WebAudioPlayer+getAudio) ⇒ <code>[Audio](#Audio)</code>
     * [.createTrack(urls)](#WebAudioPlayer+createTrack) ⇒ <code>[Track](#Track)</code>
+    * [.createPlaylist(list)](#WebAudioPlayer+createPlaylist) ⇒ <code>[Playlist](#Playlist)</code>
     * [.setVolume(gain)](#WebAudioPlayer+setVolume) ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
     * [.getVolume()](#WebAudioPlayer+getVolume) ⇒ <code>number</code>
     * [.setEq(bands)](#WebAudioPlayer+setEq) ⇒ <code>[WebAudioPlayer](#WebAudioPlayer)</code>
@@ -581,6 +826,18 @@ Returns the new Track instance.
 | Param | Type | Description |
 | --- | --- | --- |
 | urls | <code>Array.&lt;string&gt;</code> | Track sources - an array of mirror URLs pointing to the same audio piece.   Only the first valid URL will be ultimately used. |
+
+<a name="WebAudioPlayer+createPlaylist"></a>
+
+### webAudioPlayer.createPlaylist(list) ⇒ <code>[Playlist](#Playlist)</code>
+Returns the new Playlist instance.
+
+**Kind**: instance method of <code>[WebAudioPlayer](#WebAudioPlayer)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - The Playlist instance.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| list | <code>[Array.&lt;Track&gt;](#Track)</code> | (optional) Array of Track instances. |
 
 <a name="WebAudioPlayer+setVolume"></a>
 

@@ -23,6 +23,7 @@ gulp.task('build', function () {
     'src/event_target.js',
     'src/audio.js',
     'src/track.js',
+    'src/playlist.js',
     'src/web_audio_player.js'
   ])
     .pipe(concat('sources.js', {newLine: '\n'}));

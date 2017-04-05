@@ -227,6 +227,8 @@ var Utility = function () {
      *
      * @return {Audio}
      *   The Audio object.
+     *
+     * @readonly
      */
 
   }, {
@@ -931,14 +933,434 @@ var Track = function (_EventTarget) {
 'use strict';
 
 /**
+ * Provides playlist-specific methods.
+ *
+ * @extends EventTarget
+ */
+
+var Playlist = function (_EventTarget2) {
+  _inherits(Playlist, _EventTarget2);
+
+  /**
+   * Constructs a Playlist object.
+   *
+   * @param {Track[]} list
+   *   (optional) Array of Track instances.
+   */
+  function Playlist() {
+    var list = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+    _classCallCheck(this, Playlist);
+
+    /**
+     * List of tracks to play.
+     *
+     * @type {Track[]}
+     */
+    var _this3 = _possibleConstructorReturn(this, (Playlist.__proto__ || Object.getPrototypeOf(Playlist)).call(this));
+
+    _this3.list = list;
+
+    /**
+     * The current track.
+     *
+     * @type {Track|null}
+     */
+    var current = null;
+
+    /**
+     * Sets current track by its list index.
+     *
+     * @param {number} index
+     *   Index of a track in list.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     *
+     * @throws {Error}
+     *   If current track is playing or if there's no track with given index in
+     *   the list.
+     */
+    _this3.setCurrentByIndex = function (index) {
+      // Prevent changing the current track while it's playing. Otherwise it'd
+      // be impossible to pause the playing track when another one starts.
+      if (current && current.isPlaying()) {
+        throw new Error('Cannot change the current track while playing.');
+      }
+      if (!this.list[index]) {
+        throw new Error('Index not found.');
+      }
+
+      current = this.list[index];
+
+      return this;
+    };
+
+    /**
+     * Returns the current track.
+     *
+     * @return {Track|null}
+     *   The current track, or null in case of empty list.
+     */
+    _this3.getCurrent = function () {
+      if (!current && this.length) {
+        current = this.list[0];
+      }
+
+      return current;
+    };
+
+    /**
+     * Sets the track as current.
+     *
+     * This also pauses 'previously current' track in case it's still playing.
+     *
+     * @listens Track#event:play
+     *
+     * @this Track
+     */
+    var setAsCurrent = function setAsCurrent() {
+      if (current && current !== this) {
+        current.pause();
+      }
+
+      current = this;
+    };
+
+    /**
+     * Loads the next track in the list.
+     */
+    var loadNext = function loadNext() {
+      var index = _this3.getCurrentIndex();
+
+      if (index >= 0 && _this3.get(index + 1)) {
+        _this3.load(index + 1);
+      }
+    };
+
+    /**
+     * Adds track event listeners.
+     *
+     * @listens Playlist#event:trackReady
+     */
+    _this3.addEventListener('trackReady', function (track) {
+      track.addEventListener('play', setAsCurrent);
+      track.when(0, loadNext);
+
+      /**
+       * Skips to the start of next track in the list, if one exists.
+       *
+       * @listens Track#event:finished
+       */
+      track.addEventListener('finished', function () {
+        return _this3.next();
+      });
+    });
+    return _this3;
+  }
+
+  /**
+   * Returns the list index of current track.
+   *
+   * @return {number}
+   *   Current track's index, or -1 in case of empty list or if the current
+   *   track was removed from the list.
+   */
+
+
+  _createClass(Playlist, [{
+    key: 'getCurrentIndex',
+    value: function getCurrentIndex() {
+      var track = this.getCurrent();
+
+      if (track) {
+        return this.list.indexOf(track);
+      }
+
+      return -1;
+    }
+
+    /**
+     * Returns the track by index or the current one.
+     *
+     * @param {number|null} index
+     *   (optional) The list index. If omitted, the current track will be
+     *   looked for.
+     *
+     * @return {Track|null|undefined}
+     *   Either track corresponding to given index, or the current one. Null or
+     *   undefined, if there's no corresponding track in the list.
+     */
+
+  }, {
+    key: 'get',
+    value: function get() {
+      var index = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      return index === null ? this.getCurrent() : this.list[index];
+    }
+
+    /**
+     * Returns the number of tracks in the list.
+     *
+     * @return {number}
+     *   Number of tracks in the list.
+     *
+     * @readonly
+     */
+
+  }, {
+    key: 'load',
+
+
+    /**
+     * Loads the track by index or the current one.
+     *
+     * If track can't be loaded this method will try next tracks from the list
+     * recursively.
+     *
+     * @param {number|null} index
+     *   (optional) The list index. If omitted, the current track will be loaded.
+     *
+     * @return {Promise.<Track, Error>}
+     *   The Promise object.
+     *   Fulfill callback arguments:
+     *   - {Track} The Track instance, loaded.
+     *   Reject callback arguments:
+     *   - {Error} The Error object.
+     *
+     * @fires Playlist#trackReady
+     */
+    value: function load() {
+      var _this4 = this;
+
+      var index = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      var track = this.get(index);
+
+      if (!track) {
+        return Promise.reject(new Error('Attempt to load nonexistent item.'));
+      }
+
+      if (!track._playlistPromise) {
+
+        /**
+         * Contains playlist-specific promise of a loaded track.
+         *
+         * @type {Promise}
+         */
+        track._playlistPromise = track.load().then(function (track) {
+
+          /**
+           * Indicates that the track from the list is loaded.
+           *
+           * @event Playlist#trackReady
+           *
+           * @param {Track} track
+           *   Instance of the loaded track.
+           */
+          _this4.dispatchEvent('trackReady', track);
+          return track;
+        });
+      }
+
+      return track._playlistPromise.catch(function (error) {
+        // Failed to load this track's URLs, try the next one. The list could've
+        // changed by this time, search for actual index.
+        index = _this4.list.indexOf(track);
+
+        if (index < 0) {
+          throw new Error('Cannot define the next track.');
+        }
+
+        // If track is the playlist's current track, set the next one as current.
+        if (track === _this4.getCurrent() && _this4.get(index + 1)) {
+          _this4.setCurrentByIndex(index + 1);
+        }
+
+        if (_this4.get(index + 1)) {
+          return _this4.load(index + 1);
+        }
+
+        // The list's last track, if unable to load, can cause some troubles.
+        // If this catch() rejects the promise, there will be 'uncaught's
+        // in multiple places. It also can't resolve the promise, because callers
+        // expect for loaded track as a fulfillment callback argument. So it just
+        // returns an always-pending promise.
+        return new Promise(function () {});
+      });
+    }
+
+    /**
+     * Plays the loaded track by index or the current one.
+     *
+     * If track is on pause this method will resume the playback from track's
+     * current position. If track is finished it will play from the start.
+     *
+     * @param {number|null} index
+     *   (optional) The list index. If omitted, the current track will be played.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     *
+     * @throws {Error}
+     *   If there's no corresponding track in the list.
+     */
+
+  }, {
+    key: 'play',
+    value: function play() {
+      var index = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      var track = this.get(index);
+
+      if (!track) {
+        throw new Error('Attempt to play nonexistent item.');
+      }
+
+      // Reset the track to the start in case it was played earlier and is
+      // finished by now or in case it was mistakenly sought out of its duration.
+      if (track.getCurrentTime() >= track.getDuration()) {
+        track.stop();
+      }
+
+      track.play();
+
+      return this;
+    }
+
+    /**
+     * Pauses the playback of current track.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     */
+
+  }, {
+    key: 'pause',
+    value: function pause() {
+      var track = this.getCurrent();
+
+      if (track) {
+        track.pause();
+      }
+
+      return this;
+    }
+
+    /**
+     * Skips to the start of previous track in the list, if one exists.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     *
+     * @throws {Error}
+     *   If list is empty or if the current track was removed from the list.
+     */
+
+  }, {
+    key: 'previous',
+    value: function previous() {
+      var index = this.getCurrentIndex();
+
+      if (index < 0) {
+        throw new Error('Cannot define the previous track.');
+      }
+
+      if (this.get(index - 1)) {
+        // Reset the previous track to the start.
+        this.load(index - 1).then(function (track) {
+          return track.stop().play();
+        });
+      }
+
+      return this;
+    }
+
+    /**
+     * Skips to the start of next track in the list, if one exists.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     *
+     * @throws {Error}
+     *   If list is empty or if the current track was removed from the list.
+     */
+
+  }, {
+    key: 'next',
+    value: function next() {
+      var index = this.getCurrentIndex();
+
+      if (index < 0) {
+        throw new Error('Cannot define the next track.');
+      }
+
+      if (this.get(index + 1)) {
+        // Reset the next track to the start in case it was played earlier.
+        this.load(index + 1).then(function (track) {
+          return track.stop().play();
+        });
+      }
+
+      return this;
+    }
+
+    /**
+     * Indicates whether a current track is currently playing.
+     *
+     * @return {boolean}
+     *   True if audio is playing, false otherwise.
+     */
+
+  }, {
+    key: 'isPlaying',
+    value: function isPlaying() {
+      var track = this.getCurrent();
+
+      return track && track.isPlaying();
+    }
+
+    /**
+     * Adds one or more tracks to the end of the list.
+     *
+     * @param {...Track} tracks
+     *   Track instances to add.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     */
+
+  }, {
+    key: 'push',
+    value: function push() {
+      var _list;
+
+      (_list = this.list).push.apply(_list, arguments);
+
+      return this;
+    }
+  }, {
+    key: 'length',
+    get: function get() {
+      return this.list.length;
+    }
+  }]);
+
+  return Playlist;
+}(EventTarget);
+
+'use strict';
+
+/**
  * The main, public class, providing general methods.
  *
  * @extends EventTarget
  * @global
  */
 
-var WebAudioPlayer = function (_EventTarget2) {
-  _inherits(WebAudioPlayer, _EventTarget2);
+var WebAudioPlayer = function (_EventTarget3) {
+  _inherits(WebAudioPlayer, _EventTarget3);
 
   /**
    * Constructs a WebAudioPlayer object.
@@ -946,9 +1368,9 @@ var WebAudioPlayer = function (_EventTarget2) {
   function WebAudioPlayer() {
     _classCallCheck(this, WebAudioPlayer);
 
-    var _this3 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
+    var _this5 = _possibleConstructorReturn(this, (WebAudioPlayer.__proto__ || Object.getPrototypeOf(WebAudioPlayer)).call(this));
 
-    Utility.player = _this3;
+    Utility.player = _this5;
 
     /**
      * Runs code while audio is processing.
@@ -969,19 +1391,19 @@ var WebAudioPlayer = function (_EventTarget2) {
        *
        * @see {@link Track#event:playing}
        */
-      _this3.dispatchEvent('audioprocess');
+      _this5.dispatchEvent('audioprocess');
     };
 
     var eq = Utility.readStorage('eq');
     var vol = Utility.readStorage('vol');
 
     if (eq) {
-      _this3.setEq(eq);
+      _this5.setEq(eq);
     }
     if (vol) {
-      _this3.setVolume(vol);
+      _this5.setVolume(vol);
     }
-    return _this3;
+    return _this5;
   }
 
   /**
@@ -1013,6 +1435,24 @@ var WebAudioPlayer = function (_EventTarget2) {
     key: 'createTrack',
     value: function createTrack(urls) {
       return new Track(urls);
+    }
+
+    /**
+     * Returns the new Playlist instance.
+     *
+     * @param {Track[]} list
+     *   (optional) Array of Track instances.
+     *
+     * @return {Playlist}
+     *   The Playlist instance.
+     */
+
+  }, {
+    key: 'createPlaylist',
+    value: function createPlaylist() {
+      var list = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+      return new Playlist(list);
     }
 
     /**
