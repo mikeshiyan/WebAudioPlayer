@@ -615,13 +615,6 @@ var Track = function (_EventTarget) {
     var source = null;
 
     /**
-     * Contains this Track object.
-     *
-     * @type {Track}
-     */
-    var track = _this;
-
-    /**
      * Fires marker callbacks if corresponding marker is reached.
      */
     var fireMarkers = function fireMarkers() {
@@ -702,6 +695,8 @@ var Track = function (_EventTarget) {
       if (!isPlaying && offset < buffer.duration) {
         var audio = Utility.audio;
         var player = Utility.player;
+        var track = this;
+
         isPlaying = true;
         offset = Math.max(offset, 0);
         var duration = Math.max(buffer.duration - offset, 0);

@@ -560,13 +560,6 @@ class Track extends EventTarget {
     let source = null;
 
     /**
-     * Contains this Track object.
-     *
-     * @type {Track}
-     */
-    let track = this;
-
-    /**
      * Fires marker callbacks if corresponding marker is reached.
      */
     const fireMarkers = () => {
@@ -645,6 +638,8 @@ class Track extends EventTarget {
       if (!isPlaying && offset < buffer.duration) {
         const audio = Utility.audio;
         const player = Utility.player;
+        const track = this;
+
         isPlaying = true;
         offset = Math.max(offset, 0);
         let duration = Math.max(buffer.duration - offset, 0);
