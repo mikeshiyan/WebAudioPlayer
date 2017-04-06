@@ -10,13 +10,14 @@ Features:
   as you wish, and just use JS methods and events to control the playback.
 * 10-bands **equalizer**.
 * **Rememberable** settings using localStorage.
+* **Playlists**.
 * URL **mirrors**. Instead of one URL you can supply an array of them. The first
   one that resolves will be decoded.
 * Easy **events** subscription.
 * Time **markers**. These are callbacks that are executed after specified amount
   of playback time.
-* Also the volume control, play/stop/pause/seek methods, various time getters,
-  and many more.
+* Also the volume control, play / stop / pause / seek / next / previous methods,
+  various time getters, and many more.
 
 To submit bug reports and feature suggestions, or to track changes:
 https://github.com/mikeshiyan/WebAudioPlayer/issues
