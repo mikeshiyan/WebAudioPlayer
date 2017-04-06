@@ -1253,6 +1253,28 @@ class Playlist extends EventTarget {
   }
 
   /**
+   * Shuffles the list.
+   *
+   * @return {Playlist}
+   *   This Playlist instance.
+   */
+  shuffle() {
+    let i = this.length;
+    let tmp;
+    let rnd;
+
+    while (i) {
+      rnd = Math.floor(Math.random() * i);
+      --i;
+      tmp = this.list[i];
+      this.list[i] = this.list[rnd];
+      this.list[rnd] = tmp;
+    }
+
+    return this;
+  }
+
+  /**
    * Adds one or more tracks to the end of the list.
    *
    * @param {...Track} tracks

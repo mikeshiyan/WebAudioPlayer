@@ -1351,6 +1351,31 @@ var Playlist = function (_EventTarget2) {
     }
 
     /**
+     * Shuffles the list.
+     *
+     * @return {Playlist}
+     *   This Playlist instance.
+     */
+
+  }, {
+    key: 'shuffle',
+    value: function shuffle() {
+      var i = this.length;
+      var tmp = void 0;
+      var rnd = void 0;
+
+      while (i) {
+        rnd = Math.floor(Math.random() * i);
+        --i;
+        tmp = this.list[i];
+        this.list[i] = this.list[rnd];
+        this.list[rnd] = tmp;
+      }
+
+      return this;
+    }
+
+    /**
      * Adds one or more tracks to the end of the list.
      *
      * @param {...Track} tracks

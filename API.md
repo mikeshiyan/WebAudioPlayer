@@ -556,6 +556,7 @@ Provides playlist-specific methods.
     * [.previous()](#Playlist+previous) ⇒ <code>[Playlist](#Playlist)</code>
     * [.next()](#Playlist+next) ⇒ <code>[Playlist](#Playlist)</code>
     * [.isPlaying()](#Playlist+isPlaying) ⇒ <code>boolean</code>
+    * [.shuffle()](#Playlist+shuffle) ⇒ <code>[Playlist](#Playlist)</code>
     * [.push(...tracks)](#Playlist+push) ⇒ <code>[Playlist](#Playlist)</code>
     * [.addEventListener(type, callback)](#EventTarget+addEventListener)
     * [.removeEventListener(type, callback)](#EventTarget+removeEventListener)
@@ -720,6 +721,13 @@ Indicates whether a current track is currently playing.
 
 **Kind**: instance method of <code>[Playlist](#Playlist)</code>  
 **Returns**: <code>boolean</code> - True if audio is playing, false otherwise.  
+<a name="Playlist+shuffle"></a>
+
+### playlist.shuffle() ⇒ <code>[Playlist](#Playlist)</code>
+Shuffles the list.
+
+**Kind**: instance method of <code>[Playlist](#Playlist)</code>  
+**Returns**: <code>[Playlist](#Playlist)</code> - This Playlist instance.  
 <a name="Playlist+push"></a>
 
 ### playlist.push(...tracks) ⇒ <code>[Playlist](#Playlist)</code>
