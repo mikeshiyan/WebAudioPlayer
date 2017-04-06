@@ -16,8 +16,8 @@ Features:
 * Easy **events** subscription.
 * Time **markers**. These are callbacks that are executed after specified amount
   of playback time.
-* Also the volume control, play / stop / pause / seek / next / previous methods,
-  various time getters, and many more.
+* Also the volume control, repeatable lists, play / stop / pause / seek / next /
+  previous / shuffle methods, various time getters, and many more.
 
 To submit bug reports and feature suggestions, or to track changes:
 https://github.com/mikeshiyan/WebAudioPlayer/issues
