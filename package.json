@@ -1,6 +1,6 @@
 {
   "name": "web_audio_player",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.2",
   "description": "Audio player using Web Audio API.",
   "files": [
     "dist"

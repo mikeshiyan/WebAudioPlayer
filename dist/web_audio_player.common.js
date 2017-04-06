@@ -2,7 +2,7 @@
  * @file
  * Audio player using Web Audio API.
  *
- * @version 3.0.0-beta.1
+ * @version 3.0.0-beta.2
  */
 
 'use strict';
