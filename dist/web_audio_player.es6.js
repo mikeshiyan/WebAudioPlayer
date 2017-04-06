@@ -898,6 +898,13 @@ class Playlist extends EventTarget {
     this.list = list;
 
     /**
+     * Indicates whether the list is on repeat.
+     *
+     * @type {boolean}
+     */
+    this.repeat = false;
+
+    /**
      * The current track.
      *
      * @type {Track|null}
@@ -1014,14 +1021,35 @@ class Playlist extends EventTarget {
    *
    * @param {number|null} index
    *   (optional) The list index. If omitted, the current track will be
-   *   looked for.
+   *   looked for. If specified, and playlist is on repeat, then it will be
+   *   adjusted to the range.
    *
    * @return {Track|null|undefined}
    *   Either track corresponding to given index, or the current one. Null or
    *   undefined, if there's no corresponding track in the list.
    */
   get(index = null) {
-    return index === null ? this.getCurrent() : this.list[index];
+    let track;
+
+    if (index === null) {
+      track = this.getCurrent();
+    }
+    else {
+      track = this.list[index];
+
+      if (!track && this.repeat) {
+        const length = this.length;
+
+        if (index >= length) {
+          track = this.list[index - length];
+        }
+        else if (index < 0) {
+          track = this.list[index + length];
+        }
+      }
+    }
+
+    return track;
   }
 
   /**
@@ -1094,6 +1122,9 @@ class Playlist extends EventTarget {
 
       // If track is the playlist's current track, set the next one as current.
       if (track === this.getCurrent() && this.get(index + 1)) {
+        // This also has a positive side effect: if playlist is full of invalid
+        // tracks and is on repeat, this call saves from infinite load()
+        // recursion, by throwing error.
         this.setCurrentByIndex(index + 1);
       }
 

@@ -543,6 +543,7 @@ Provides playlist-specific methods.
 * [Playlist](#Playlist) ⇐ <code>[EventTarget](#EventTarget)</code>
     * [new Playlist(list)](#new_Playlist_new)
     * [.list](#Playlist+list) : <code>[Array.&lt;Track&gt;](#Track)</code>
+    * [.repeat](#Playlist+repeat) : <code>boolean</code>
     * [.length](#Playlist+length) ⇒ <code>number</code>
     * [.eventListeners](#EventTarget+eventListeners) : <code>object</code>
     * [.setCurrentByIndex(index)](#Playlist+setCurrentByIndex) ⇒ <code>[Playlist](#Playlist)</code>
@@ -575,6 +576,12 @@ Constructs a Playlist object.
 
 ### playlist.list : <code>[Array.&lt;Track&gt;](#Track)</code>
 List of tracks to play.
+
+**Kind**: instance property of <code>[Playlist](#Playlist)</code>  
+<a name="Playlist+repeat"></a>
+
+### playlist.repeat : <code>boolean</code>
+Indicates whether the list is on repeat.
 
 **Kind**: instance property of <code>[Playlist](#Playlist)</code>  
 <a name="Playlist+length"></a>
@@ -636,7 +643,7 @@ Returns the track by index or the current one.
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| index | <code>number</code> &#124; <code>null</code> | <code></code> | (optional) The list index. If omitted, the current track will be   looked for. |
+| index | <code>number</code> &#124; <code>null</code> | <code></code> | (optional) The list index. If omitted, the current track will be   looked for. If specified, and playlist is on repeat, then it will be   adjusted to the range. |
 
 <a name="Playlist+load"></a>
 

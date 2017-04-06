@@ -962,6 +962,13 @@ var Playlist = function (_EventTarget2) {
     _this3.list = list;
 
     /**
+     * Indicates whether the list is on repeat.
+     *
+     * @type {boolean}
+     */
+    _this3.repeat = false;
+
+    /**
      * The current track.
      *
      * @type {Track|null}
@@ -1085,7 +1092,8 @@ var Playlist = function (_EventTarget2) {
      *
      * @param {number|null} index
      *   (optional) The list index. If omitted, the current track will be
-     *   looked for.
+     *   looked for. If specified, and playlist is on repeat, then it will be
+     *   adjusted to the range.
      *
      * @return {Track|null|undefined}
      *   Either track corresponding to given index, or the current one. Null or
@@ -1097,7 +1105,25 @@ var Playlist = function (_EventTarget2) {
     value: function get() {
       var index = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-      return index === null ? this.getCurrent() : this.list[index];
+      var track = void 0;
+
+      if (index === null) {
+        track = this.getCurrent();
+      } else {
+        track = this.list[index];
+
+        if (!track && this.repeat) {
+          var length = this.length;
+
+          if (index >= length) {
+            track = this.list[index - length];
+          } else if (index < 0) {
+            track = this.list[index + length];
+          }
+        }
+      }
+
+      return track;
     }
 
     /**
@@ -1175,6 +1201,9 @@ var Playlist = function (_EventTarget2) {
 
         // If track is the playlist's current track, set the next one as current.
         if (track === _this4.getCurrent() && _this4.get(index + 1)) {
+          // This also has a positive side effect: if playlist is full of invalid
+          // tracks and is on repeat, this call saves from infinite load()
+          // recursion, by throwing error.
           _this4.setCurrentByIndex(index + 1);
         }
 
