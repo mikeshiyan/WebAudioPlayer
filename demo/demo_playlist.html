@@ -1,0 +1,41 @@
+<script src="../dist/web_audio_player.min.js"></script>
+<script>
+  var player = new WebAudioPlayer();
+  var playlist;
+
+  // All audio by Jack Strait.
+  var filesList = [
+    // http://www.flashkit.com/loops/Easy_Listening/Instrumental/marimba-melody-150527191506.html
+    ['https://dl.dropboxusercontent.com/s/tuurhex493glb61/marimba_melody.mp3?dl=1'],
+    // http://www.flashkit.com/loops/Pop-Rock/videogame-theme-140701151006.html
+    ['https://dl.dropboxusercontent.com/s/ef10pdjcja1ksqz/action_movie.mp3?dl=1'],
+    // http://www.flashkit.com/loops/Easy_Listening/Easy_Listening/after-the-rain-150527192016.html
+    ['https://dl.dropboxusercontent.com/s/gmu0htaucqrn95t/after_the_rain.mp3?dl=1'],
+  ];
+
+  playlist = player.createPlaylist();
+
+  filesList.forEach(function (files) {
+    var track = player.createTrack(files);
+    track.data.paths = files.join(', ');
+    playlist.push(track);
+  });
+
+  playlist.addEventListener('trackReady', function (track) {
+    track.addEventListener('play', function () {
+      console.log('playing:', this.data.paths, '(', this.getDuration(), 's)');
+    });
+
+    track.when(track.getDuration() / 2, function () {
+      console.log('half of track has been played');
+    });
+  });
+
+  playlist.load()
+    .then(function () {
+      playlist.play();
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+</script>
